@@ -1,7 +1,4 @@
 # Entornos virtuales y variables de entorno
-backend/venv/
-venv/
-env/
 .env
 
 # Archivos compilados y caché de Python
