@@ -1,16 +1,13 @@
 from fastapi import FastAPI
+from core.database import engine
+import models
+from routes import estudiantes, registros
 
-app = FastAPI(title="API de STAYLYTICS")
+# Construcción de tablas
+models.Base.metadata.create_all(bind=engine)
 
-@app.get("/")
-def ruta_raiz():
-    return {"mensaje": "El motor de STAYLYTICS está en línea"}
+app = FastAPI(title="API de STAYLYTICS - Arquitectura Modular")
 
-@app.get("/api/estudiantes/prueba")
-def obtener_estudiante_prueba():
-    return {
-        "id_estudiante": 1,
-        "nombres": "Luis",
-        "riesgo": "Alto",
-        "probabilidad_desercion": 85.5
-    }
+# Registro de rutas
+app.include_router(estudiantes.router, tags=["Estudiantes y Análisis"])
+app.include_router(registros.router, tags=["Control Académico (Notas y Faltas)"])
