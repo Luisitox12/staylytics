@@ -52,3 +52,8 @@ class HistorialResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class DashboardResumen(BaseModel):
+    Bajo: int
+    Medio: int
+    Alto: int
