@@ -10,3 +10,20 @@ __pycache__/
 # Archivos ocultos del sistema operativo (Mac/Windows)
 .DS_Store
 Thumbs.db
+
+# ==========================================
+# Editor / IDE
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==========================================
+# Agentes de código (OpenCode , etc)
+# ==========================================
+.opencode/
+.atl/
+**/SKILL.md
+**/AGENTS.md
