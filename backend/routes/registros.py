@@ -6,7 +6,7 @@ from services import ejecutar_recalculo_riesgo
 
 router = APIRouter()
 
-@router.post("/api/faltas/")
+@router.post("/api/faltas/", response_model=schemas.FaltaResponse)
 def registrar_falta(falta: schemas.FaltaCreate, db: Session = Depends(get_db)):
     estudiante = db.query(models.Estudiante).filter(models.Estudiante.ID_Estudiante == falta.ID_Estudiante).first()
     if not estudiante:
@@ -17,7 +17,7 @@ def registrar_falta(falta: schemas.FaltaCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nueva_falta)
     
-    ejecutar_recalculo_riesgo(nueva_falta.ID_Estudiante, db)
+    ejecutar_recalculo_riesgo(falta.ID_Estudiante, db)
     return nueva_falta
 
 @router.post("/api/historial/", response_model=schemas.HistorialResponse)
@@ -31,5 +31,5 @@ def registrar_nota(historial: schemas.HistorialCreate, db: Session = Depends(get
     db.commit()
     db.refresh(nuevo_registro)
     
-    ejecutar_recalculo_riesgo(nuevo_registro.ID_Estudiante, db)
+    ejecutar_recalculo_riesgo(historial.ID_Estudiante, db)
     return nuevo_registro

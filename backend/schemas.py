@@ -27,6 +27,16 @@ class FaltaCreate(BaseModel):
     Faltas_Acumuladas: int
     Limite_Faltas: int
 
+class FaltaResponse(BaseModel):
+    ID_Falta: int
+    ID_Estudiante: int
+    Materia: str
+    Faltas_Acumuladas: int
+    Limite_Faltas: int
+
+    class Config:
+        from_attributes = True
+
 class AnalisisRiesgoResponse(BaseModel):
     ID_Analisis: int
     Puntuacion_Riesgo: int
@@ -57,3 +67,13 @@ class DashboardResumen(BaseModel):
     Bajo: int
     Medio: int
     Alto: int
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class UsuarioCreate(BaseModel):
+    Nombre_Completo: str
+    Correo: str
+    Password: str
+    Rol: str = "Coordinador"
