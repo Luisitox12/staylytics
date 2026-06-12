@@ -10,7 +10,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="API de STAYLYTICS - Arquitectura Modular")
 
 # =========================================================
-# CONFIGURACIÓN DE CORS (Defensa del Perímetro)
+# CONFIGURACIÓN DE CORS Defensa del Perímetro
 # =========================================================
 # Define estrictamente quién tiene permiso de consumir esta API.
 # Ajusta los puertos según lo que use tu frontend (3000 para React/Next, 5173 para Vite).
