@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 import models, schemas
 from services import ejecutar_recalculo_riesgo
+from core.security import get_usuario_actual
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_usuario_actual)])
 
 @router.post("/api/faltas/", response_model=schemas.FaltaResponse)
 def registrar_falta(falta: schemas.FaltaCreate, db: Session = Depends(get_db)):

@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from core.database import get_db
 import models, schemas
+from core.security import get_usuario_actual
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_usuario_actual)])
 
 @router.get("/api/dashboard/resumen", response_model=schemas.DashboardResumen)
 def obtener_resumen_riesgo(db: Session = Depends(get_db)):

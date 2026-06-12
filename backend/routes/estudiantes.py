@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 import models, schemas
 from services import ejecutar_recalculo_riesgo
+from core.security import get_usuario_actual
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_usuario_actual)])
 
 @router.post("/api/estudiantes/", response_model=schemas.EstudianteResponse)
 def crear_estudiante(estudiante: schemas.EstudianteCreate, db: Session = Depends(get_db)):
