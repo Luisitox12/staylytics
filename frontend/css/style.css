@@ -1,0 +1,120 @@
+/* ============================================================
+   STAYLYTICS — Estilos de Marca
+   ============================================================
+   Colores institucionales:
+     --deep-blue      #0A2540  → Confianza, estabilidad
+     --electric-cyan  #00C4FF  → Prevención, detección temprana
+     --violet-brand   #7B4FD4  → Transformación, innovación
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* --- Reset / base --- */
+* {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* --- Transiciones suaves --- */
+a,
+button,
+tr {
+  transition: all 0.15s ease;
+}
+
+/* --- Nav link hover (sidebar) --- */
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* --- KPI cards --- */
+.kpi-card {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4;
+}
+
+/* --- Skeleton loading --- */
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* --- Tablas: hover row --- */
+.data-row:hover {
+  background-color: rgba(0, 196, 255, 0.04);
+}
+
+/* --- Botón primario personalizado (fallback si Tailwind no carga) --- */
+.btn-primary {
+  background-color: #0a2540;
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  transition: background-color 0.15s ease;
+}
+.btn-primary:hover {
+  background-color: #0d2f52;
+}
+
+/* --- Semáforo animado (pulso suave cuando es crítico) --- */
+@keyframes semaforo-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+  }
+}
+.semaforo-critico {
+  animation: semaforo-pulse 2s ease-in-out infinite;
+}
+
+/* --- Responsive: sidebar se achica en tablets --- */
+@media (max-width: 1024px) {
+  aside {
+    width: 64px;
+  }
+  aside .nav-link span {
+    display: none;
+  }
+  aside .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  aside > div:first-child span {
+    display: none;
+  }
+  aside > div:first-child {
+    justify-content: center;
+    padding: 0.5rem;
+  }
+  aside > div:last-child > div {
+    display: none;
+  }
+}
