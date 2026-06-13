@@ -24,7 +24,20 @@ def crear_estudiante(estudiante: schemas.EstudianteCreate, db: Session = Depends
 @router.get("/api/estudiantes/", response_model=list[schemas.EstudianteResponse])
 def obtener_estudiantes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     estudiantes = db.query(models.Estudiante).offset(skip).limit(limit).all()
-    return estudiantes
+    
+    lista_respuesta = []
+    for est in estudiantes:
+        # Buscamos el cálculo matemático más reciente de este alumno
+        ultimo_riesgo = db.query(models.AnalisisRiesgo).filter(
+            models.AnalisisRiesgo.ID_Estudiante == est.ID_Estudiante
+        ).order_by(models.AnalisisRiesgo.ID_Analisis.desc()).first()
+        
+        # Transformamos el modelo a diccionario y le inyectamos el riesgo
+        est_dict = {c.name: getattr(est, c.name) for c in est.__table__.columns}
+        est_dict["Riesgo"] = ultimo_riesgo.Nivel_Alerta if ultimo_riesgo else "—"
+        lista_respuesta.append(est_dict)
+        
+    return lista_respuesta
 
 
 @router.get("/api/estudiantes/{id_estudiante}", response_model=schemas.EstudianteResponse)
@@ -35,7 +48,15 @@ def obtener_estudiante_por_id(
     estudiante = db.query(models.Estudiante).filter(models.Estudiante.ID_Estudiante == id_estudiante).first()
     if not estudiante:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado en la base de datos.")
-    return estudiante
+    
+    ultimo_riesgo = db.query(models.AnalisisRiesgo).filter(
+        models.AnalisisRiesgo.ID_Estudiante == id_estudiante
+    ).order_by(models.AnalisisRiesgo.ID_Analisis.desc()).first()
+    
+    est_dict = {c.name: getattr(estudiante, c.name) for c in estudiante.__table__.columns}
+    est_dict["Riesgo"] = ultimo_riesgo.Nivel_Alerta if ultimo_riesgo else "—"
+    
+    return est_dict
 
 
 # =========================================================

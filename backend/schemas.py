@@ -17,6 +17,7 @@ class EstudianteCreate(EstudianteBase):
 class EstudianteResponse(EstudianteBase):
     ID_Estudiante: int
     Estatus_Actual: str
+    Riesgo: str = "—"
 
     class Config:
         from_attributes = True

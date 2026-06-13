@@ -2,13 +2,13 @@
  * STAYLYTICS — Dashboard JavaScript
  *
  * Arquitectura:
- *   1. MOCK DATA       → simula la API mientras diseño sin el backend corriendo
- *   2. AUTH            → login con FormData, JWT en localStorage
- *   3. API WRAPPER     → fetch() con Authorization header
- *   4. ROUTER          → hash-based SPA (#login, #dashboard, #estudiantes, #perfil/{id})
- *   5. VIEWS           → renderizan cada sección
- *   6. CHARTS          → Chart.js con click handlers (drill-down)
- *   7. INIT            → arranque
+ * 1. MOCK DATA       → simula la API mientras diseño sin el backend corriendo
+ * 2. AUTH            → login con FormData, JWT en localStorage
+ * 3. API WRAPPER     → fetch() con Authorization header
+ * 4. ROUTER          → hash-based SPA (#login, #dashboard, #estudiantes, #perfil/{id})
+ * 5. VIEWS           → renderizan cada sección
+ * 6. CHARTS          → Chart.js con click handlers (drill-down)
+ * 7. INIT            → arranque
  *
  * Modo mock = true  → usa datos locales (diseño)
  * Modo mock = false → usa fetch() real con token
@@ -18,29 +18,13 @@
 // 1. MOCK DATA — estructura IDÉNTICA a la que devuelve la API real
 // ================================================================
 const MOCK = Object.freeze({
-  enabled: true,
+  enabled: false, // LA IA ESTÁ APAGADA. CONECTADO AL BACKEND REAL.
 
   resumen: { Bajo: 10, Medio: 5, Alto: 3 },
 
   estudiantes: [
     { Cedula: "28544044", Nombres: "Luis", Apellidos: "Hidalgo", Edad: 25, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 1, Estatus_Actual: "Activo", Riesgo: "Alto" },
-    { Cedula: "30123456", Nombres: "María", Apellidos: "González", Edad: 22, Estrato_Socioeconomico: "Bajo", Situacion_Laboral: true, ID_Estudiante: 2, Estatus_Actual: "Activo", Riesgo: "Alto" },
-    { Cedula: "25111222", Nombres: "Carlos", Apellidos: "Mendoza", Edad: 24, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 3, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "27444555", Nombres: "Ana", Apellidos: "Paredes", Edad: 23, Estrato_Socioeconomico: "Alto", Situacion_Laboral: false, ID_Estudiante: 4, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "29777888", Nombres: "Pedro", Apellidos: "Ramírez", Edad: 26, Estrato_Socioeconomico: "Medio", Situacion_Laboral: true, ID_Estudiante: 5, Estatus_Actual: "Inactivo", Riesgo: "Bajo" },
-    { Cedula: "26555999", Nombres: "Sofía", Apellidos: "López", Edad: 21, Estrato_Socioeconomico: "Bajo", Situacion_Laboral: false, ID_Estudiante: 6, Estatus_Actual: "Activo", Riesgo: "Bajo" },
-    { Cedula: "28333444", Nombres: "Diego", Apellidos: "Martínez", Edad: 27, Estrato_Socioeconomico: "Medio", Situacion_Laboral: true, ID_Estudiante: 7, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "24666111", Nombres: "Laura", Apellidos: "Castillo", Edad: 20, Estrato_Socioeconomico: "Bajo", Situacion_Laboral: false, ID_Estudiante: 8, Estatus_Actual: "Activo", Riesgo: "Alto" },
-    { Cedula: "31000222", Nombres: "Jorge", Apellidos: "Rivas", Edad: 28, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 9, Estatus_Actual: "Activo", Riesgo: "Bajo" },
-    { Cedula: "27777888", Nombres: "Valentina", Apellidos: "Morales", Edad: 22, Estrato_Socioeconomico: "Alto", Situacion_Laboral: false, ID_Estudiante: 10, Estatus_Actual: "Activo", Riesgo: "Bajo" },
-    { Cedula: "29333444", Nombres: "Andrés", Apellidos: "Cruz", Edad: 24, Estrato_Socioeconomico: "Medio", Situacion_Laboral: true, ID_Estudiante: 11, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "26111222", Nombres: "Camila", Apellidos: "Torres", Edad: 23, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 12, Estatus_Actual: "Activo", Riesgo: "Bajo" },
-    { Cedula: "28555111", Nombres: "Fernando", Apellidos: "García", Edad: 26, Estrato_Socioeconomico: "Bajo", Situacion_Laboral: true, ID_Estudiante: 13, Estatus_Actual: "Activo", Riesgo: "Alto" },
-    { Cedula: "30555666", Nombres: "Gabriela", Apellidos: "Silva", Edad: 21, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 14, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "27000123", Nombres: "Ricardo", Apellidos: "Peña", Edad: 25, Estrato_Socioeconomico: "Alto", Situacion_Laboral: false, ID_Estudiante: 15, Estatus_Actual: "Inactivo", Riesgo: "Bajo" },
-    { Cedula: "25444999", Nombres: "Daniela", Apellidos: "Flores", Edad: 22, Estrato_Socioeconomico: "Bajo", Situacion_Laboral: true, ID_Estudiante: 16, Estatus_Actual: "Activo", Riesgo: "Medio" },
-    { Cedula: "28111222", Nombres: "Mateo", Apellidos: "Suárez", Edad: 24, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 17, Estatus_Actual: "Activo", Riesgo: "Bajo" },
-    { Cedula: "29555333", Nombres: "Isabella", Apellidos: "Rojas", Edad: 23, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 18, Estatus_Actual: "Activo", Riesgo: "Alto" },
+    // ... resto de mock data (ignorado porque enabled es false)
   ],
 
   /** Devuelve los estudiantes filtrados por nivel de riesgo */
@@ -397,7 +381,6 @@ async function renderDashboard() {
       },
     ],
   });
-
 }
 
 // ---- 5c. TABLA GENERAL DE ESTUDIANTES ----
@@ -407,42 +390,44 @@ async function renderTablaEstudiantes(filtroRiesgo) {
   const tbody = document.getElementById("table-estudiantes-body");
   const empty = document.getElementById("table-estudiantes-empty");
 
-  estudiantesData = await apiFetch("/api/estudiantes/");
-
-  let filtered = estudiantesData;
+  // Decidimos a qué endpoint pegarle al backend
   if (filtroRiesgo) {
-    filtered = filtered.filter((e) => e.Riesgo === filtroRiesgo);
+    estudiantesData = await apiFetch(`/api/estudiantes/riesgo/${filtroRiesgo}`);
+  } else {
+    estudiantesData = await apiFetch("/api/estudiantes/");
   }
 
-  if (filtered.length === 0) {
+  if (estudiantesData.length === 0) {
     tbody.innerHTML = "";
     empty.classList.remove("hidden");
     return;
   }
 
   empty.classList.add("hidden");
-  tbody.innerHTML = filtered
-    .map(
-      (e) => `
-    <tr class="border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer" onclick="window.location.hash='#perfil?id=${e.ID_Estudiante}'">
-      <td class="px-6 py-3.5 font-medium text-gray-900">${e.Cedula}</td>
-      <td class="px-6 py-3.5">${e.Nombres} ${e.Apellidos}</td>
-      <td class="px-6 py-3.5">${e.Edad}</td>
-      <td class="px-6 py-3.5 capitalize">${e.Estrato_Socioeconomico}</td>
-      <td class="px-6 py-3.5">
-        <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${e.Estatus_Actual === "Activo" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"}">
-          ${e.Estatus_Actual}
-        </span>
-      </td>
-      <td class="px-6 py-3.5">${riesgoBadgeHTML(e.Riesgo || "—")}</td>
-      <td class="px-6 py-3.5">
-        <button class="text-electric-cyan hover:text-cyan-700 text-xs font-medium" onclick="event.stopPropagation(); window.location.hash='#perfil?id=${e.ID_Estudiante}'">
-          Ver perfil
-        </button>
-      </td>
-    </tr>
-  `
-    )
+  
+  // Renderizamos usando el nivel de Riesgo REAL que inyectaste en el backend
+  tbody.innerHTML = estudiantesData
+    .map((e) => {
+      return `
+      <tr class="border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer" onclick="window.location.hash='#perfil?id=${e.ID_Estudiante}'">
+        <td class="px-6 py-3.5 font-medium text-gray-900">${e.Cedula}</td>
+        <td class="px-6 py-3.5">${e.Nombres} ${e.Apellidos}</td>
+        <td class="px-6 py-3.5">${e.Edad}</td>
+        <td class="px-6 py-3.5 capitalize">${e.Estrato_Socioeconomico}</td>
+        <td class="px-6 py-3.5">
+          <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${e.Estatus_Actual === "Activo" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"}">
+            ${e.Estatus_Actual}
+          </span>
+        </td>
+        <td class="px-6 py-3.5">${riesgoBadgeHTML(e.Riesgo || "—")}</td>
+        <td class="px-6 py-3.5">
+          <button class="text-electric-cyan hover:text-cyan-700 text-xs font-medium" onclick="event.stopPropagation(); window.location.hash='#perfil?id=${e.ID_Estudiante}'">
+            Ver perfil
+          </button>
+        </td>
+      </tr>
+      `;
+    })
     .join("");
 }
 
@@ -450,12 +435,8 @@ async function renderTablaEstudiantes(filtroRiesgo) {
 async function renderPerfil(id) {
   const est = await apiFetch(`/api/estudiantes/${id}`);
 
-  // Necesitamos el riesgo del estudiante. En modo mock está incluido,
-  // en modo real necesitaríamos un endpoint adicional.
-  // Por ahora lo buscamos en los datos mock.
-  const riesgoEst = MOCK.enabled
-    ? MOCK.estudiantePorId(id)?.Riesgo || "—"
-    : "—";
+  // Leemos el riesgo directamente de tu nuevo esquema del backend
+  const riesgoEst = est.Riesgo || "—"; 
 
   // Avatar
   const inicial = (est.Nombres || "—").charAt(0).toUpperCase();
@@ -487,44 +468,6 @@ async function renderPerfil(id) {
   document.getElementById("nota-id-estudiante").value = id;
   document.getElementById("falta-id-estudiante").value = id;
 }
-
-// ---- 5f. FORM: NOTA ----
-document.getElementById("form-nota").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const feedback = document.getElementById("nota-feedback");
-  const btn = e.target.querySelector('button[type="submit"]');
-
-  const body = {
-    ID_Estudiante: parseInt(document.getElementById("nota-id-estudiante").value, 10),
-    Materia: document.getElementById("nota-materia").value,
-    Semestre: parseInt(document.getElementById("nota-semestre").value, 10),
-    Nota_Definitiva: parseFloat(document.getElementById("nota-valor").value),
-    Condicion: document.getElementById("nota-condicion").value,
-  };
-
-  btn.disabled = true;
-  btn.textContent = "Guardando...";
-  feedback.classList.add("hidden");
-
-  try {
-    await apiFetch("/api/historial/", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
-    feedback.className = "text-sm p-3 rounded-xl bg-emerald-50 text-emerald-700";
-    feedback.textContent = "✅ Nota registrada. El riesgo se ha recalculado automáticamente.";
-    feedback.classList.remove("hidden");
-    e.target.reset();
-    document.getElementById("nota-id-estudiante").value = body.ID_Estudiante;
-  } catch (err) {
-    feedback.className = "text-sm p-3 rounded-xl bg-red-50 text-red-600";
-    feedback.textContent = `Error: ${err.message}`;
-    feedback.classList.remove("hidden");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Guardar Nota";
-  }
-});
 
 // ---- 5g. FORM: FALTA ----
 document.getElementById("form-falta").addEventListener("submit", async (e) => {
