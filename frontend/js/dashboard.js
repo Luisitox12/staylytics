@@ -469,6 +469,44 @@ async function renderPerfil(id) {
   document.getElementById("falta-id-estudiante").value = id;
 }
 
+// ---- 5f. FORM: NOTA ----
+document.getElementById("form-nota").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const feedback = document.getElementById("nota-feedback");
+  const btn = e.target.querySelector('button[type="submit"]');
+
+  const body = {
+    ID_Estudiante: parseInt(document.getElementById("nota-id-estudiante").value, 10),
+    Materia: document.getElementById("nota-materia").value,
+    Semestre: parseInt(document.getElementById("nota-semestre").value, 10),
+    Nota_Definitiva: parseFloat(document.getElementById("nota-valor").value),
+    Condicion: document.getElementById("nota-condicion").value,
+  };
+
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+  feedback.classList.add("hidden");
+
+  try {
+    await apiFetch("/api/historial/", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    feedback.className = "text-sm p-3 rounded-xl bg-emerald-50 text-emerald-700";
+    feedback.textContent = "✅ Nota registrada. El riesgo se ha recalculado automáticamente.";
+    feedback.classList.remove("hidden");
+    e.target.reset();
+    document.getElementById("nota-id-estudiante").value = body.ID_Estudiante;
+  } catch (err) {
+    feedback.className = "text-sm p-3 rounded-xl bg-red-50 text-red-600";
+    feedback.textContent = `Error: ${err.message}`;
+    feedback.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Guardar Nota";
+  }
+});
+
 // ---- 5g. FORM: FALTA ----
 document.getElementById("form-falta").addEventListener("submit", async (e) => {
   e.preventDefault();
