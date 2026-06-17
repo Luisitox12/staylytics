@@ -467,6 +467,49 @@ async function renderPerfil(id) {
   // Cargar ID en formularios
   document.getElementById("nota-id-estudiante").value = id;
   document.getElementById("falta-id-estudiante").value = id;
+
+  // --- CARGAR EXPEDIENTE (NOTAS Y FALTAS) ---
+  try {
+    const expediente = await apiFetch(`/api/estudiantes/${id}/expediente`);
+    
+    // Renderizar Notas
+    const tbodyNotas = document.getElementById("perfil-tabla-notas");
+    if (expediente.notas.length === 0) {
+      tbodyNotas.innerHTML = `<tr><td colspan="4" class="py-3 text-gray-400 text-xs text-center">Sin notas registradas</td></tr>`;
+    } else {
+      tbodyNotas.innerHTML = expediente.notas.map(n => `
+        <tr class="border-b border-gray-50">
+          <td class="py-2 font-medium text-gray-800">${n.Materia}</td>
+          <td class="py-2 text-gray-600">${n.Semestre}</td>
+          <td class="py-2 font-bold ${n.Nota_Definitiva < 10 ? 'text-red-600' : 'text-emerald-600'}">${n.Nota_Definitiva}</td>
+          <td class="py-2 text-xs">${n.Condicion}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Renderizar Faltas
+    const tbodyFaltas = document.getElementById("perfil-tabla-faltas");
+    if (expediente.faltas.length === 0) {
+      tbodyFaltas.innerHTML = `<tr><td colspan="4" class="py-3 text-gray-400 text-xs text-center">Sin faltas registradas</td></tr>`;
+    } else {
+      tbodyFaltas.innerHTML = expediente.faltas.map(f => {
+        const critica = f.Faltas_Acumuladas >= f.Limite_Faltas;
+        return `
+        <tr class="border-b border-gray-50">
+          <td class="py-2 font-medium text-gray-800">${f.Materia}</td>
+          <td class="py-2 font-bold ${critica ? 'text-red-600' : 'text-gray-600'}">${f.Faltas_Acumuladas}</td>
+          <td class="py-2 text-gray-600">${f.Limite_Faltas}</td>
+          <td class="py-2 text-xs">
+            ${critica ? '<span class="text-red-600 font-semibold">Crítico</span>' : '<span class="text-emerald-600">Regular</span>'}
+          </td>
+        </tr>
+        `;
+      }).join('');
+    }
+  } catch (error) {
+    console.error("Error cargando expediente:", error);
+  }
+
 }
 
 // ---- 5f. FORM: NOTA ----
@@ -552,6 +595,41 @@ document.getElementById("search-estudiantes")?.addEventListener("input", (e) => 
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(q) ? "" : "none";
   });
+});
+
+// ---- 5i. FORM: NUEVO ESTUDIANTE ----
+document.getElementById("btn-toggle-form-estudiante")?.addEventListener("click", () => {
+  document.getElementById("panel-nuevo-estudiante").classList.toggle("hidden");
+});
+
+document.getElementById("form-nuevo-estudiante")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  
+  const body = {
+    Cedula: document.getElementById("nuevo-cedula").value.trim(),
+    Nombres: document.getElementById("nuevo-nombres").value.trim(),
+    Apellidos: document.getElementById("nuevo-apellidos").value.trim(),
+    Edad: parseInt(document.getElementById("nuevo-edad").value, 10),
+    Estrato_Socioeconomico: document.getElementById("nuevo-estrato").value,
+    Situacion_Laboral: document.getElementById("nuevo-laboral").value === "true"
+  };
+
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+
+  try {
+    await apiFetch("/api/estudiantes/", { method: "POST", body: JSON.stringify(body) });
+    e.target.reset();
+    document.getElementById("panel-nuevo-estudiante").classList.add("hidden");
+    // Refrescamos la tabla para que aparezca el nuevo registro
+    renderTablaEstudiantes();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Guardar Estudiante";
+  }
 });
 
 // ================================================================
