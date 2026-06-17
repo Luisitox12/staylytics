@@ -18,7 +18,22 @@ def crear_estudiante(estudiante: schemas.EstudianteCreate, db: Session = Depends
     db.add(nuevo_estudiante)
     db.commit() 
     db.refresh(nuevo_estudiante) 
-    return nuevo_estudiante
+
+    # --- INYECCIÓN DE RIESGO BASE ---
+    # Evita que el estudiante quede "fantasma" en el Dashboard
+    analisis_base = models.AnalisisRiesgo(
+        ID_Estudiante=nuevo_estudiante.ID_Estudiante,
+        Puntuacion_Riesgo=0,
+        Nivel_Alerta="Bajo"
+    )
+    db.add(analisis_base)
+    db.commit()
+
+    # Preparamos la respuesta para que empate con el esquema
+    est_dict = {c.name: getattr(nuevo_estudiante, c.name) for c in nuevo_estudiante.__table__.columns}
+    est_dict["Riesgo"] = "Bajo"
+    
+    return est_dict
 
 
 @router.get("/api/estudiantes/", response_model=list[schemas.EstudianteResponse])
@@ -59,9 +74,7 @@ def obtener_estudiante_por_id(
     return est_dict
 
 
-# =========================================================
-# NUEVO ENDPOINT: FILTRADO LONGITUDINAL POR RIESGO (DRILL-DOWN)
-# =========================================================
+#ENDPOINT: FILTRADO LONGITUDINAL POR RIESGO (DRILL-DOWN)
 @router.get("/api/estudiantes/riesgo/{nivel_alerta}", response_model=list[schemas.EstudianteResponse])
 def obtener_estudiantes_por_riesgo(
     nivel_alerta: str = Path(..., title="Nivel de alerta a filtrar (Bajo, Medio, Alto)"),
@@ -95,3 +108,14 @@ def obtener_estudiantes_por_riesgo(
     ).all()
 
     return estudiantes
+
+@router.get("/api/estudiantes/{id_estudiante}/expediente")
+def obtener_expediente(id_estudiante: int, db: Session = Depends(get_db)):
+    """Devuelve todo el historial de notas y faltas convertido a diccionarios puros para el frontend."""
+    notas = db.query(models.HistorialAcademico).filter(models.HistorialAcademico.ID_Estudiante == id_estudiante).all()
+    faltas = db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == id_estudiante).all()
+    
+    return {
+        "notas": [{col.name: getattr(nota, col.name) for col in nota.__table__.columns} for nota in notas],
+        "faltas": [{col.name: getattr(falta, col.name) for col in falta.__table__.columns} for falta in faltas]
+    }
