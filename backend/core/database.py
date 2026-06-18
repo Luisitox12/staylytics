@@ -1,15 +1,26 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-# Cambia esta línea en database.py
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:@host.docker.internal:3306/SistemaPrevencionDesercion"
+# Fallback local para desarrollo tradicional (XAMPP / Docker local)
+URL_LOCAL = "mysql+pymysql://root:@host.docker.internal:3306/SistemaPrevencionDesercion"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Render inyectará automáticamente la URL real en la variable DATABASE_URL
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", URL_LOCAL)
+
+# Evaluamos si estamos conectándonos a Aiven para forzar los argumentos SSL
+is_remote = "aivencloud.com" in SQLALCHEMY_DATABASE_URL
+connect_args = {"ssl": {}} if is_remote else {}
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args=connect_args
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# El inyector de dependencias vital para los endpoints
 def get_db():
     db = SessionLocal()
     try:
