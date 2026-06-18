@@ -683,4 +683,23 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     navigate(window.location.hash);
   }
+
+  // --- Control del Modal FAQ ---
+  const modalFaq = document.getElementById("modal-faq");
+  
+  document.getElementById("btn-open-faq")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    modalFaq.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-close-faq")?.addEventListener("click", () => {
+    modalFaq.classList.add("hidden");
+  });
+
+  // Cerrar el modal al hacer clic afuera de la tarjeta
+  modalFaq?.addEventListener("click", (e) => {
+    if (e.target === modalFaq) {
+      modalFaq.classList.add("hidden");
+    }
+  });
 });
