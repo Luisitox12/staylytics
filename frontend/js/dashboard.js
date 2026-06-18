@@ -64,7 +64,9 @@ function estaAutenticado() {
 // ================================================================
 // 3. API WRAPPER
 // ================================================================
-const API_BASE = "http://localhost:8000";
+//const API_BASE = "http://localhost:8000";
+
+const API_BASE = "https://staylytics-api.onrender.com";
 
 async function apiFetch(endpoint, options = {}) {
   const token = getToken();
