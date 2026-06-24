@@ -64,9 +64,9 @@ function estaAutenticado() {
 // ================================================================
 // 3. API WRAPPER
 // ================================================================
-//const API_BASE = "http://localhost:8000";
+const API_BASE = "http://localhost:8000";
 
-const API_BASE = "https://staylytics-api.onrender.com";
+//const API_BASE = "https://staylytics-api.onrender.com";
 
 async function apiFetch(endpoint, options = {}) {
   const token = getToken();
@@ -304,7 +304,17 @@ async function handleLogin(email, password) {
 let dashboardChartInstance = null;
 
 async function renderDashboard() {
-  const data = await apiFetch("/api/dashboard/resumen");
+  const carreraSeleccionada = document.getElementById('filtro-carrera-dashboard').value;
+  let url = "/api/dashboard/resumen";
+  if (carreraSeleccionada !== "Todas") {
+      url += `?carrera=${encodeURIComponent(carreraSeleccionada)}`;
+  }
+
+  const data = await apiFetch(url);
+
+  // Inyectar datos en el panel inteligente
+  document.getElementById('titulo-periodo').textContent = `Resumen Analítico — Cohorte ${data.Periodo_Actual}`;
+  document.getElementById('mensaje-inteligente').textContent = data.Mensaje_Inteligente;
 
   // KPIs
   document.querySelectorAll(".kpi-val").forEach((el) => {
@@ -324,113 +334,153 @@ async function renderDashboard() {
     type: "doughnut",
     data: {
       labels,
-      datasets: [
-        {
+      datasets: [{
           data: valores,
           backgroundColor: colors,
           borderWidth: 0,
           hoverOffset: 10,
-        },
-      ],
+        }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: "62%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { usePointStyle: true, padding: 16, font: { size: 12 } },
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-              return `${ctx.label}: ${ctx.parsed} (${pct}%)`;
-            },
-          },
-        },
-      },
       onClick: (e, elements) => {
         if (elements.length > 0) {
-          const idx = elements[0].index;
-          const nivel = labels[idx];
+          const nivel = labels[elements[0].index];
           window.location.hash = `#estudiantes?riesgo=${nivel}`;
         }
       },
     },
-    plugins: [
-      {
-        id: "centerTotal",
-        afterDraw(chart) {
-          const { ctx, chartArea, data } = chart;
-          const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-          const cx = (chartArea.left + chartArea.right) / 2;
-          const cy = (chartArea.top + chartArea.bottom) / 2;
-
-          ctx.save();
-          ctx.font = "bold 32px Inter, system-ui, sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = "#0A2540";
-          ctx.fillText(total, cx, cy - 8);
-          ctx.font = "11px Inter, system-ui, sans-serif";
-          ctx.fillStyle = "#6B7280";
-          ctx.fillText("estudiantes", cx, cy + 20);
-          ctx.restore();
-        },
+    plugins: [{
+      id: "centerTotal",
+      afterDraw(chart) {
+        const { ctx, chartArea, data } = chart;
+        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+        const cx = (chartArea.left + chartArea.right) / 2;
+        const cy = (chartArea.top + chartArea.bottom) / 2;
+        ctx.save();
+        ctx.font = "bold 32px Inter, system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#0A2540";
+        ctx.fillText(total, cx, cy - 8);
+        ctx.font = "11px Inter, system-ui, sans-serif";
+        ctx.fillStyle = "#6B7280";
+        ctx.fillText("estudiantes", cx, cy + 20);
+        ctx.restore();
       },
-    ],
+    }],
   });
 }
 
 // ---- 5c. TABLA GENERAL DE ESTUDIANTES ----
 let estudiantesData = [];
 
-async function renderTablaEstudiantes(filtroRiesgo) {
+let ordenRiesgoActivo = 0; // -1 = Descendente (Alto a Bajo), 1 = Ascendente // 0 = Alfabético, -1 = Descendente (Alto), 1 = Ascendente (Bajo)
+let limiteVisualEstudiantes = 100; // Buffer visual para evitar el colapso del DOM
+
+async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
   const tbody = document.getElementById("table-estudiantes-body");
   const empty = document.getElementById("table-estudiantes-empty");
+  const pagContainer = document.getElementById("pagination-container");
 
-  // Decidimos a qué endpoint pegarle al backend
-  if (filtroRiesgo) {
-    estudiantesData = await apiFetch(`/api/estudiantes/riesgo/${filtroRiesgo}`);
-  } else {
-    estudiantesData = await apiFetch("/api/estudiantes/");
+  // Si es un filtro nuevo o navegación limpia, reiniciamos el visor a 100
+  if (!cargarMas) {
+      limiteVisualEstudiantes = 100;
   }
 
-  if (estudiantesData.length === 0) {
-    tbody.innerHTML = "";
-    empty.classList.remove("hidden");
-    return;
+  const carrera = document.getElementById("filtro-carrera-estudiantes")?.value || "Todas";
+  const periodo = document.getElementById("filtro-periodo-estudiantes")?.value || "Todos";
+  const filtroLocalRiesgo = filtroRiesgoDirecto || document.getElementById("filtro-riesgo-estudiantes")?.value || "Todos";
+
+  if (filtroRiesgoDirecto && document.getElementById("filtro-riesgo-estudiantes")) {
+      document.getElementById("filtro-riesgo-estudiantes").value = filtroRiesgoDirecto;
   }
 
-  empty.classList.add("hidden");
-  
-  // Renderizamos usando el nivel de Riesgo REAL que inyectaste en el backend
-  tbody.innerHTML = estudiantesData
-    .map((e) => {
-      return `
-      <tr class="border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer" onclick="window.location.hash='#perfil?id=${e.ID_Estudiante}'">
-        <td class="px-6 py-3.5 font-medium text-gray-900">${e.Cedula}</td>
-        <td class="px-6 py-3.5">${e.Nombres} ${e.Apellidos}</td>
-        <td class="px-6 py-3.5">${e.Edad}</td>
-        <td class="px-6 py-3.5 capitalize">${e.Estrato_Socioeconomico}</td>
-        <td class="px-6 py-3.5">
-          <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${e.Estatus_Actual === "Activo" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-600"}">
-            ${e.Estatus_Actual}
-          </span>
-        </td>
-        <td class="px-6 py-3.5">${riesgoBadgeHTML(e.Riesgo || "—")}</td>
-        <td class="px-6 py-3.5">
-          <button class="text-electric-cyan hover:text-cyan-700 text-xs font-medium" onclick="event.stopPropagation(); window.location.hash='#perfil?id=${e.ID_Estudiante}'">
-            Ver perfil
-          </button>
-        </td>
-      </tr>
-      `;
-    })
-    .join("");
+  let endpoint = "/api/estudiantes/";
+  const params = new URLSearchParams();
+  if (carrera !== "Todas") params.append("carrera", carrera);
+  if (periodo !== "Todos") params.append("periodo", periodo);
+  const queryStr = params.toString();
+  if (queryStr) endpoint += `?${queryStr}`;
+
+  // Si solo estamos expandiendo la lista, no mostramos el loader para no parpadear la pantalla
+  if (!cargarMas) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400 py-12">Filtrando expedientes...</td></tr>`;
+  }
+
+  try {
+    // Si cargamos más, reutilizamos los datos que ya están guardados en memoria local
+    if (!cargarMas) {
+        estudiantesData = await apiFetch(endpoint);
+    }
+
+    let dataFiltrada = estudiantesData;
+    if (filtroLocalRiesgo !== "Todos") {
+        dataFiltrada = dataFiltrada.filter(e => e.Riesgo === filtroLocalRiesgo);
+    }
+
+    if (dataFiltrada.length === 0) {
+      tbody.innerHTML = "";
+      empty.classList.remove("hidden");
+      pagContainer?.classList.add("hidden");
+      return;
+    }
+
+    empty.classList.add("hidden");
+
+    // Ordenamiento multidimensional
+    const jerarquiaRiesgo = { "Alto": 4, "Medio": 3, "Bajo": 2, "Inactivo": 1, "—": 0 };
+    dataFiltrada.sort((a, b) => {
+        if (ordenRiesgoActivo === 0) {
+            const nombreA = `${a.Nombres} ${a.Apellidos}`.toLowerCase();
+            const nombreB = `${b.Nombres} ${b.Apellidos}`.toLowerCase();
+            return nombreA.localeCompare(nombreB);
+        } else {
+            const pesoA = jerarquiaRiesgo[a.Riesgo || "—"];
+            const pesoB = jerarquiaRiesgo[b.Riesgo || "—"];
+            return (pesoA - pesoB) * ordenRiesgoActivo;
+        }
+    });
+
+    // --- SEGMENTACIÓN (PAGINACIÓN FRONTAL) ---
+    const totalFiltrados = dataFiltrada.length;
+    const chunkMostrado = dataFiltrada.slice(0, limiteVisualEstudiantes);
+
+    tbody.innerHTML = chunkMostrado
+      .map((e) => `
+        <tr class="border-b border-gray-50 hover:bg-gray-50 transition cursor-pointer" onclick="window.location.hash='#perfil?id=${e.ID_Estudiante}'">
+          <td class="px-6 py-3.5 font-medium text-gray-900">${e.Cedula}</td>
+          <td class="px-6 py-3.5">${e.Nombres} ${e.Apellidos}</td>
+          <td class="px-6 py-3.5">${e.Edad}</td>
+          <td class="px-6 py-3.5 capitalize">${e.Estrato_Socioeconomico}</td>
+          <td class="px-6 py-3.5">
+            <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${e.Es_Regular ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}">
+              ${e.Es_Regular ? "Regular" : "Solo Activo"}
+            </span>
+          </td>
+          <td class="px-6 py-3.5">${riesgoBadgeHTML(e.Riesgo || "—")}</td>
+          <td class="px-6 py-3.5">
+            <button class="text-electric-cyan hover:text-cyan-700 text-xs font-medium" onclick="event.stopPropagation(); window.location.hash='#perfil?id=${e.ID_Estudiante}'">
+              Ver perfil
+            </button>
+          </td>
+        </tr>
+      `).join("");
+
+    // Control de visibilidad del botón de carga masiva
+    if (pagContainer) {
+        if (limiteVisualEstudiantes < totalFiltrados) {
+            pagContainer.classList.remove("hidden");
+        } else {
+            pagContainer.classList.add("hidden");
+        }
+    }
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500 py-12">Error: ${err.message}</td></tr>`;
+  }
 }
 
 // ---- 5e. PERFIL DEL ESTUDIANTE ----
@@ -452,6 +502,18 @@ async function renderPerfil(id) {
   document.getElementById("perfil-estrato").textContent = est.Estrato_Socioeconomico || "—";
   document.getElementById("perfil-laboral").textContent = est.Situacion_Laboral ? "Trabaja" : "No trabaja";
   document.getElementById("perfil-estado").textContent = est.Estatus_Actual || "—";
+  document.getElementById('perfil-genero').textContent = est.Genero || "—";
+  document.getElementById('perfil-carrera').textContent = est.Carrera || "—";
+  document.getElementById('perfil-carrera').title = est.Carrera || "—";
+
+  const inscripcionEl = document.getElementById('perfil-inscripcion');
+  if (est.Es_Regular) {
+      inscripcionEl.textContent = "Regular (Inscrito)";
+      inscripcionEl.className = "font-semibold text-emerald-600";
+  } else {
+      inscripcionEl.textContent = "Solo Activo";
+      inscripcionEl.className = "font-semibold text-red-600";
+  }
 
   // Semáforo
   const semaforoMap = {
@@ -613,6 +675,9 @@ document.getElementById("form-nuevo-estudiante")?.addEventListener("submit", asy
     Nombres: document.getElementById("nuevo-nombres").value.trim(),
     Apellidos: document.getElementById("nuevo-apellidos").value.trim(),
     Edad: parseInt(document.getElementById("nuevo-edad").value, 10),
+    Genero: document.getElementById("nuevo-genero").value,
+    Carrera: document.getElementById("nuevo-carrera").value,
+    Es_Regular: document.getElementById("nuevo-es-regular").value === 'true',
     Estrato_Socioeconomico: document.getElementById("nuevo-estrato").value,
     Situacion_Laboral: document.getElementById("nuevo-laboral").value === "true"
   };
@@ -648,38 +713,34 @@ function riesgoBadgeHTML(nivel) {
 }
 
 // ================================================================
-// 7. INIT
+// 7. INIT (ARRANQUE DEL SISTEMA Y ESCUCHA DE EVENTOS)
 // ================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Login form ---
-  document.getElementById("form-login").addEventListener("submit", (e) => {
+  // --- Autenticación ---
+  document.getElementById("form-login")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
     handleLogin(email, password);
   });
 
-  // --- Mock login shortcut ---
-  document.getElementById("btn-mock-login").addEventListener("click", () => {
+  document.getElementById("btn-mock-login")?.addEventListener("click", () => {
     setToken("mock_token_sin_backend");
     window.location.hash = "#dashboard";
   });
 
-  // --- Logout ---
-  document.getElementById("btn-logout").addEventListener("click", () => {
+  document.getElementById("btn-logout")?.addEventListener("click", () => {
     clearToken();
     window.location.hash = "#login";
   });
 
-  // --- Back to students ---
-  document.getElementById("btn-back-estudiantes").addEventListener("click", () => {
+  // --- Navegación ---
+  document.getElementById("btn-back-estudiantes")?.addEventListener("click", () => {
     window.location.hash = "#estudiantes";
   });
 
   // --- Router ---
   window.addEventListener("hashchange", () => navigate(window.location.hash));
-
-  // --- Initial route ---
   if (!window.location.hash || window.location.hash === "#") {
     window.location.hash = estaAutenticado() ? "#dashboard" : "#login";
   } else {
@@ -698,10 +759,83 @@ document.addEventListener("DOMContentLoaded", () => {
     modalFaq.classList.add("hidden");
   });
 
-  // Cerrar el modal al hacer clic afuera de la tarjeta
   modalFaq?.addEventListener("click", (e) => {
     if (e.target === modalFaq) {
       modalFaq.classList.add("hidden");
     }
+  });
+
+  // --- Filtros Analíticos (Sección Dashboard) ---
+  document.getElementById('filtro-carrera-dashboard')?.addEventListener('change', () => {
+    renderDashboard();
+  });
+
+  // --- Filtros Analíticos (Sección Estudiantes) ---
+  document.getElementById('filtro-carrera-estudiantes')?.addEventListener('change', () => {
+    if (window.location.hash.includes("riesgo=")) window.location.hash = "#estudiantes";
+    renderTablaEstudiantes();
+  });
+
+  document.getElementById('filtro-periodo-estudiantes')?.addEventListener('change', () => {
+    if (window.location.hash.includes("riesgo=")) window.location.hash = "#estudiantes";
+    renderTablaEstudiantes();
+  });
+
+  // --- Simulador de Ingesta Masiva DACE (UNERG) ---
+  // --- Simulador de Ingesta Masiva DACE (UNERG) ---
+  document.getElementById('btn-sync-dace')?.addEventListener('click', async (e) => {
+    const btn = e.target;
+    btn.textContent = "Ingestando 1,000 expedientes (DACE)...";
+    btn.disabled = true;
+
+    try {
+      // 1. Descargamos el JSON masivo localmente
+      const responseArchivo = await fetch('lote_1000.json');
+      if (!responseArchivo.ok) throw new Error("No se encontró el archivo lote_1000.json");
+      const loteDACE = await responseArchivo.json();
+
+      // 2. Lo enviamos al Webhook del Backend
+      const response = await apiFetch("/api/estudiantes/dace-webhook", { 
+        method: "POST", 
+        body: JSON.stringify(loteDACE) 
+      });
+      
+      alert(response.mensaje);
+      renderDashboard(); 
+    } catch (err) {
+      alert("Error en la prueba de estrés: " + err.message);
+    } finally {
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Simular Ingesta DACE (UNERG)`;
+      btn.disabled = false;
+    }
+  });
+
+  // --- Filtro de Riesgo Local ---
+  document.getElementById('filtro-riesgo-estudiantes')?.addEventListener('change', () => {
+    if (window.location.hash.includes("riesgo=")) window.location.hash = "#estudiantes";
+    renderTablaEstudiantes();
+  });
+
+ // --- Ordenar por Nivel de Alerta ---
+  document.getElementById('sort-riesgo-btn')?.addEventListener('click', () => {
+    // Ciclo: Alfabético (0) -> Riesgo Alto Primero (-1) -> Riesgo Bajo Primero (1) -> vuelve a 0
+    if (ordenRiesgoActivo === 0) {
+        ordenRiesgoActivo = -1;
+    } else if (ordenRiesgoActivo === -1) {
+        ordenRiesgoActivo = 1;
+    } else {
+        ordenRiesgoActivo = 0;
+    }
+
+    const iconos = {0: "↕", "-1": "↓", "1": "↑"};
+    document.getElementById('sort-riesgo-btn').innerText = `Nivel de Alerta ${iconos[ordenRiesgoActivo]}`;
+
+    renderTablaEstudiantes();
+  });
+
+  // --- Control de Paginación Frontal (Cargar más) ---
+  document.getElementById("btn-load-more")?.addEventListener("click", () => {
+    limiteVisualEstudiantes += 100; // Incrementamos el visor en bloques de 100
+    renderTablaEstudiantes(null, true); // Forzamos el renderizado sin consultar la API de nuevo
   });
 });

@@ -15,6 +15,7 @@ app = FastAPI(title="API de STAYLYTICS - Arquitectura Modular")
 # Define estrictamente quién tiene permiso de consumir esta API.
 # Ajusta los puertos según lo que use tu frontend (3000 para React/Next, 5173 para Vite).
 origenes_permitidos = [
+    "http://localhost",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",

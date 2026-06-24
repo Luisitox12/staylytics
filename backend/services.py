@@ -3,12 +3,8 @@ import models
 
 def get_val(col):
     """Extrae el valor numérico puro de un objeto ColumnElement o lo retorna si ya es número."""
-    # Si es una columna de SQLAlchemy, usamos ._value() o lo casteamos.
-    # Para evitar errores, simplemente forzamos a float o int la representación string
-    # o el valor directo si SQLAlchemy ya lo resolvió.
     try:
         if hasattr(col, 'expression'):
-            # En SQLAlchemy 2.0 a veces los valores vienen envueltos
             return float(str(col))
         return float(col)
     except:
@@ -19,27 +15,62 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
     if not estudiante:
         return None
 
-    # MÓDULO 1: Socioeconómico
-    factor_socio = 0.0
-    if estudiante.Situacion_Laboral == True:  # type: ignore
-        factor_socio += 50.0
-    if str(estudiante.Estrato_Socioeconomico).lower() in ["bajo", "muy bajo"]:
-        factor_socio += 50.0
+    # =====================================================================
+    # REGLA DE NEGOCIO CRÍTICA (Exigencia DACE)
+    # =====================================================================
+    # Cortocircuito Lógico: Si el estudiante no inscribió materias este 
+    # semestre, el motor predictivo se detiene. No hay riesgo que prevenir.
+    if getattr(estudiante, 'Es_Regular', False) == False:
+        nuevo_analisis = models.AnalisisRiesgo(
+            ID_Estudiante=id_estudiante,
+            Puntuacion_Riesgo=0,
+            Nivel_Alerta="Inactivo"
+        )
+        db.add(nuevo_analisis)
+        db.commit()
+        db.refresh(nuevo_analisis)
+        return nuevo_analisis
 
-    # MÓDULO 2: Asistencia
+    # =====================================================================
+    # MÓDULO 1: Demográfico y Socioeconómico (Contexto Invisible)
+    # =====================================================================
+    factor_socio = 0.0
+    
+    # 1. Factores Económicos Clásicos
+    if getattr(estudiante, 'Situacion_Laboral', False) == True: 
+        factor_socio += 40.0
+    
+    estrato = str(getattr(estudiante, 'Estrato_Socioeconomico', '')).lower()
+    if estrato in ["bajo", "muy bajo"]:
+        factor_socio += 40.0
+
+    # 2. Modificador Institucional (El argumento para la profesora)
+    # Penalización base por carrera. (Ej: Ingeniería tiene mayor carga de deserción temprana)
+    carrera = str(getattr(estudiante, 'Carrera', '')).lower()
+    if "informática" in carrera or "ingeniería" in carrera:
+        factor_socio += 20.0
+    else:
+        factor_socio += 10.0
+        
+    factor_socio = min(factor_socio, 100.0)
+
+    # =====================================================================
+    # MÓDULO 2: Asistencia (Indicador Temprano - 45%)
+    # =====================================================================
     faltas = db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == id_estudiante).all()
     factor_asistencia = 0.0
     if faltas:
         porcentajes = []
         for f in faltas:
-            # Extraemos los valores puros
             acum = get_val(f.Faltas_Acumuladas)
             lim = get_val(f.Limite_Faltas)
             limite_seguro = lim if lim > 0 else 1.0
             porcentajes.append((acum / limite_seguro) * 100.0)
         factor_asistencia = min(max(porcentajes), 100.0)
 
-    # MÓDULO 3: Académico
+    # =====================================================================
+    # MÓDULO 3: Académico (Indicador Tardío - 35%)
+    # =====================================================================
     historial = db.query(models.HistorialAcademico).filter(models.HistorialAcademico.ID_Estudiante == id_estudiante).all()
     factor_academico = 0.0
     if historial:
@@ -48,7 +79,6 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         suma_notas_20 = 0.0
         
         for registro in historial:
-            # Extraemos el valor puro
             nota = get_val(registro.Nota_Definitiva)
             suma_notas_20 += nota
             if nota < 10.0: 
@@ -61,7 +91,9 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         sub_reprobacion = (float(materias_reprobadas) / float(materias_totales)) * 100.0
         factor_academico = (sub_promedio * 0.30) + (sub_reprobacion * 0.70)
 
-    # --- MOTOR DE PESOS DINÁMICOS ---
+    # =====================================================================
+    # MOTOR DE PESOS DINÁMICOS (Redistribución por Cold Start)
+    # =====================================================================
     peso_socio = 0.20
     peso_asistencia = 0.45
     peso_academico = 0.35
@@ -80,11 +112,12 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         peso_asistencia = 0.0
         peso_academico = 0.0
 
-    # FUSIÓN INTELIGENTE
+    # =====================================================================
+    # FUSIÓN INTELIGENTE Y CLASIFICACIÓN
+    # =====================================================================
     riesgo_total = (factor_asistencia * peso_asistencia) + (factor_academico * peso_academico) + (factor_socio * peso_socio)
     puntuacion_final = int(round(riesgo_total))
 
-    # CLASIFICACIÓN
     if puntuacion_final <= 30:
         alerta = "Bajo"
     elif puntuacion_final <= 70:

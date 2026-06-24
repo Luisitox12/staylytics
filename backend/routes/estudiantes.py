@@ -5,6 +5,7 @@ from core.database import get_db
 import models, schemas
 from services import ejecutar_recalculo_riesgo
 from core.security import get_usuario_actual
+from typing import Optional
 
 router = APIRouter(dependencies=[Depends(get_usuario_actual)])
 
@@ -19,35 +20,37 @@ def crear_estudiante(estudiante: schemas.EstudianteCreate, db: Session = Depends
     db.commit() 
     db.refresh(nuevo_estudiante) 
 
-    # --- INYECCIÓN DE RIESGO BASE ---
-    # Evita que el estudiante quede "fantasma" en el Dashboard
-    analisis_base = models.AnalisisRiesgo(
-        ID_Estudiante=nuevo_estudiante.ID_Estudiante,
-        Puntuacion_Riesgo=0,
-        Nivel_Alerta="Bajo"
-    )
-    db.add(analisis_base)
-    db.commit()
+    analisis = ejecutar_recalculo_riesgo(nuevo_estudiante.ID_Estudiante, db) # type: ignore
 
-    # Preparamos la respuesta para que empate con el esquema
     est_dict = {c.name: getattr(nuevo_estudiante, c.name) for c in nuevo_estudiante.__table__.columns}
-    est_dict["Riesgo"] = "Bajo"
+    est_dict["Riesgo"] = analisis.Nivel_Alerta if analisis else "—"
     
     return est_dict
 
 
 @router.get("/api/estudiantes/", response_model=list[schemas.EstudianteResponse])
-def obtener_estudiantes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    estudiantes = db.query(models.Estudiante).offset(skip).limit(limit).all()
+def obtener_estudiantes(
+    carrera: Optional[str] = None, 
+    periodo: Optional[str] = None, 
+    skip: int = 0, 
+    limit: int = 2000, 
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Estudiante)
+    
+    if carrera and carrera != "Todas":
+        query = query.filter(models.Estudiante.Carrera == carrera)
+    if periodo and periodo != "Todos":
+        query = query.filter(models.Estudiante.Ultimo_Periodo == periodo)
+        
+    estudiantes = query.offset(skip).limit(limit).all()
     
     lista_respuesta = []
     for est in estudiantes:
-        # Buscamos el cálculo matemático más reciente de este alumno
         ultimo_riesgo = db.query(models.AnalisisRiesgo).filter(
             models.AnalisisRiesgo.ID_Estudiante == est.ID_Estudiante
         ).order_by(models.AnalisisRiesgo.ID_Analisis.desc()).first()
         
-        # Transformamos el modelo a diccionario y le inyectamos el riesgo
         est_dict = {c.name: getattr(est, c.name) for c in est.__table__.columns}
         est_dict["Riesgo"] = ultimo_riesgo.Nivel_Alerta if ultimo_riesgo else "—"
         lista_respuesta.append(est_dict)
@@ -74,17 +77,11 @@ def obtener_estudiante_por_id(
     return est_dict
 
 
-#ENDPOINT: FILTRADO LONGITUDINAL POR RIESGO (DRILL-DOWN)
 @router.get("/api/estudiantes/riesgo/{nivel_alerta}", response_model=list[schemas.EstudianteResponse])
 def obtener_estudiantes_por_riesgo(
     nivel_alerta: str = Path(..., title="Nivel de alerta a filtrar (Bajo, Medio, Alto)"),
     db: Session = Depends(get_db)
 ):
-    """
-    Extrae la lista de estudiantes cuyo ÚLTIMO cálculo de riesgo coincida 
-    exactamente con el nivel de alerta solicitado. Evita la duplicidad histórica.
-    """
-    # 1. Normalización y Validación estricta del parámetro de entrada
     nivel_formateado = nivel_alerta.capitalize()
     if nivel_formateado not in ["Bajo", "Medio", "Alto"]:
         raise HTTPException(
@@ -92,13 +89,10 @@ def obtener_estudiantes_por_riesgo(
             detail="Parámetro inválido. Los niveles de alerta permitidos son: Bajo, Medio o Alto."
         )
 
-    # 2. SUBCONSULTA: Identifica el ID del cálculo más reciente para cada estudiante
     subquery = db.query(
         func.max(models.AnalisisRiesgo.ID_Analisis).label("ultimo_analisis")
     ).group_by(models.AnalisisRiesgo.ID_Estudiante).subquery()
 
-    # 3. CONSULTA MAESTRA (Doble JOIN):
-    # Cruzamos Estudiantes con sus Riesgos, y luego filtramos usando solo los IDs de la subconsulta
     estudiantes = db.query(models.Estudiante).join(
         models.AnalisisRiesgo, models.Estudiante.ID_Estudiante == models.AnalisisRiesgo.ID_Estudiante
     ).join(
@@ -109,9 +103,9 @@ def obtener_estudiantes_por_riesgo(
 
     return estudiantes
 
+
 @router.get("/api/estudiantes/{id_estudiante}/expediente")
 def obtener_expediente(id_estudiante: int, db: Session = Depends(get_db)):
-    """Devuelve todo el historial de notas y faltas convertido a diccionarios puros para el frontend."""
     notas = db.query(models.HistorialAcademico).filter(models.HistorialAcademico.ID_Estudiante == id_estudiante).all()
     faltas = db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == id_estudiante).all()
     
@@ -119,3 +113,69 @@ def obtener_expediente(id_estudiante: int, db: Session = Depends(get_db)):
         "notas": [{col.name: getattr(nota, col.name) for col in nota.__table__.columns} for nota in notas],
         "faltas": [{col.name: getattr(falta, col.name) for col in falta.__table__.columns} for falta in faltas]
     }
+
+
+@router.post("/api/estudiantes/dace-webhook")
+def sincronizar_dace_lote(payload: list[schemas.EstudianteDaceSync], db: Session = Depends(get_db)):
+    """
+    WEBHOOK INDUSTRIAL: Procesa registros demográficos y académicos en masa.
+    Modo relacional: Inyecta notas y faltas directamente desde el JSON central.
+    """
+    from services import ejecutar_recalculo_riesgo
+    procesados = 0
+    
+    for est_data in payload:
+        db_est = db.query(models.Estudiante).filter(models.Estudiante.Cedula == est_data.Cedula).first()
+        
+        notas_inbound = est_data.Notas
+        faltas_inbound = est_data.Faltas
+        est_dict = est_data.model_dump(exclude={"Notas", "Faltas"})
+        
+        if not db_est:
+            db_est = models.Estudiante(**est_dict)
+            db.add(db_est)
+            db.commit()
+            db.refresh(db_est)
+        else:
+            db_est.Ultimo_Periodo = est_data.Ultimo_Periodo  # type: ignore
+            db_est.Es_Regular = est_data.Es_Regular          # type: ignore
+            db_est.Carrera = est_data.Carrera                # type: ignore
+            db.commit()
+
+        # Limpieza de seguridad: borrar notas previas del mismo semestre para no duplicar
+        db.query(models.HistorialAcademico).filter(
+            models.HistorialAcademico.ID_Estudiante == db_est.ID_Estudiante,
+            models.HistorialAcademico.Semestre == (est_data.Notas[0].Semestre if est_data.Notas else 1)
+        ).delete()
+        
+        db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == db_est.ID_Estudiante).delete()
+
+        # Ingesta Transaccional de Notas
+        if notas_inbound:
+            for n in notas_inbound:
+                nueva_nota = models.HistorialAcademico(
+                    ID_Estudiante=db_est.ID_Estudiante,
+                    Materia=n.Materia,
+                    Semestre=n.Semestre,
+                    Nota_Definitiva=n.Nota_Definitiva,
+                    Condicion=n.Condicion
+                )
+                db.add(nueva_nota)
+
+        # Ingesta Transaccional de Faltas
+        if faltas_inbound:
+            for f in faltas_inbound:
+                nueva_falta = models.ControlFaltas(
+                    ID_Estudiante=db_est.ID_Estudiante,
+                    Materia=f.Materia,
+                    Faltas_Acumuladas=f.Faltas_Acumuladas,
+                    Limite_Faltas=f.Limite_Faltas
+                )
+                db.add(nueva_falta)
+            
+        db.commit()
+
+        ejecutar_recalculo_riesgo(db_est.ID_Estudiante, db) # type: ignore
+        procesados += 1
+
+    return {"mensaje": f"Sincronización DACE Relacional completa. {procesados} expedientes integrados con notas y faltas."}

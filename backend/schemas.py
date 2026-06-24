@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
+from typing import Optional
 
 # 1. ESQUEMA BASE
 class EstudianteBase(BaseModel):
@@ -6,9 +7,12 @@ class EstudianteBase(BaseModel):
     Nombres: str
     Apellidos: str
     Edad: int
+    Genero: str
+    Carrera: str
     Estrato_Socioeconomico: str
     Situacion_Laboral: bool
-
+    Es_Regular: bool = True
+    Ultimo_Periodo: Optional[str] = None
 # 2. ESQUEMA DE CREACIÓN
 class EstudianteCreate(EstudianteBase):
     pass 
@@ -65,9 +69,13 @@ class HistorialResponse(BaseModel):
         from_attributes = True
 
 class DashboardResumen(BaseModel):
-    Bajo: int
-    Medio: int
-    Alto: int
+    Bajo: int = 0
+    Medio: int = 0
+    Alto: int = 0
+    Inactivo: int = 0
+    Total_Activos: int = 0
+    Mensaje_Inteligente: str = "Sin datos suficientes."
+    Periodo_Actual: str = "2026-1"
 
 class Token(BaseModel):
     access_token: str
@@ -78,3 +86,30 @@ class UsuarioCreate(BaseModel):
     Correo: str
     Password: str
     Rol: str = "Coordinador"
+
+# Esquemas auxiliares para la ingesta masiva de DACE
+class NotaDaceInbound(BaseModel):
+    Materia: str
+    Semestre: int
+    Nota_Definitiva: float
+    Condicion: str = "Regular"
+
+class FaltaDaceInbound(BaseModel):
+    Materia: str
+    Faltas_Acumuladas: int
+    Limite_Faltas: int
+
+# El payload maestro que enviará el sistema central por cada alumno
+class EstudianteDaceSync(BaseModel):
+    Cedula: str
+    Nombres: str
+    Apellidos: str
+    Edad: int
+    Genero: str
+    Carrera: str
+    Estrato_Socioeconomico: str
+    Situacion_Laboral: bool
+    Es_Regular: bool = True
+    Ultimo_Periodo: str
+    Notas: list[NotaDaceInbound] = []
+    Faltas: list[FaltaDaceInbound] = []

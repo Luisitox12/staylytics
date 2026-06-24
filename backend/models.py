@@ -15,6 +15,7 @@ class UsuarioAdministrativo(Base):
     Fecha_Registro = Column(TIMESTAMP, server_default=func.now())
 
 # 2. ENTIDAD NÚCLEO (Estudiantes)
+# 2. ENTIDAD NÚCLEO (Estudiantes)
 class Estudiante(Base):
     __tablename__ = "Estudiantes"
     ID_Estudiante = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -22,9 +23,13 @@ class Estudiante(Base):
     Nombres = Column(String(50), nullable=False)
     Apellidos = Column(String(50), nullable=False)
     Edad = Column(Integer, nullable=False)
+    Genero = Column(String(20), nullable=False) 
+    Carrera = Column(String(100), nullable=False)
+    Estatus_Actual = Column(String(20), default='Activo') # Activo en el sistema central
+    Es_Regular = Column(Boolean, default=True)            # True = Inscribió materias este semestre
+    Ultimo_Periodo = Column(String(20), nullable=True)    # Para filtrar por tiempo de carga (Ej: "2026-1")
     Estrato_Socioeconomico = Column(String(20), nullable=False)
     Situacion_Laboral = Column(Boolean, nullable=False)
-    Estatus_Actual = Column(String(20), default='Activo')
 
     historial = relationship("HistorialAcademico", back_populates="estudiante", cascade="all, delete-orphan")
     faltas = relationship("ControlFaltas", back_populates="estudiante", cascade="all, delete-orphan")

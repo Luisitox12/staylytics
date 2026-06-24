@@ -6,6 +6,9 @@ from sqlalchemy.ext.declarative import declarative_base
 # Fallback local para desarrollo tradicional (XAMPP / Docker local)
 URL_LOCAL = "mysql+pymysql://root:@host.docker.internal:3306/SistemaPrevencionDesercion"
 
+URL_LOCAL = "mysql+pymysql://root:@localhost:3306/SistemaPrevencionDesercion"
+SQLALCHEMY_DATABASE_URL = URL_LOCAL
+
 # Render inyectará automáticamente la URL real en la variable DATABASE_URL
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", URL_LOCAL)
 

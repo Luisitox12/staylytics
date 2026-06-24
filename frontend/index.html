@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STAYLYTICS — Panel de Control</title>
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -24,20 +23,14 @@
     };
   </script>
 
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
-  <!-- Custom styles -->
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased min-h-screen">
 
-  <!-- ================================================================ -->
-  <!-- VIEW: LOGIN                                                     -->
-  <!-- ================================================================ -->
   <section id="view-login" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-deep-blue via-[#0D2F52] to-[#0F3A5F] p-4">
     <div class="w-full max-w-md">
-      <!-- Logo -->
       <div class="text-center mb-8">
         <img src="stylitics_logo.png" alt="STAYLYTICS" class="h-40 w-auto mx-auto drop-shadow-lg" />
         <p class="text-electric-cyan/70 text-sm mt-3 font-medium tracking-wide">
@@ -45,13 +38,11 @@
         </p>
       </div>
 
-      <!-- Card -->
       <div class="bg-white rounded-2xl shadow-2xl p-8">
         <h1 class="text-xl font-bold text-deep-blue mb-1">Iniciar sesión</h1>
         <p class="text-sm text-gray-500 mb-6">Ingresá tus credenciales institucionales</p>
 
         <form id="form-login" class="space-y-5">
-          <!-- Correo -->
           <div>
             <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
             <input
@@ -63,7 +54,6 @@
             />
           </div>
 
-          <!-- Contraseña -->
           <div>
             <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <input
@@ -75,10 +65,8 @@
             />
           </div>
 
-          <!-- Error -->
           <div id="login-error" class="hidden text-red-600 text-sm bg-red-50 p-3 rounded-xl"></div>
 
-          <!-- Submit -->
           <button
             type="submit"
             id="btn-login"
@@ -88,7 +76,6 @@
           </button>
         </form>
 
-        <!-- Mock toggle -->
         <p class="text-center text-xs text-gray-400 mt-6">
           ¿Solo estás diseñando?
           <button id="btn-mock-login" class="text-electric-cyan hover:underline font-medium">Entrar con datos mock</button>
@@ -97,30 +84,22 @@
     </div>
   </section>
 
-  <!-- ================================================================ -->
-  <!-- APP: authenticated layout                                       -->
-  <!-- ================================================================ -->
   <div id="app-main" class="hidden min-h-screen flex">
 
-    <!-- SIDEBAR -->
     <aside class="w-64 bg-deep-blue flex flex-col shrink-0">
-      <!-- Logo -->
       <div class="h-20 flex items-center gap-3 px-5 border-b border-white/10">
         <img src="stylitics_logo.png" alt="" class="h-16 w-auto" />
         <span class="text-white font-bold text-lg tracking-tight">STAYLYTICS</span>
       </div>
 
-      <!-- Nav -->
       <nav class="flex-1 px-3 py-6 space-y-1">
         <a href="#dashboard" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition" data-view="dashboard">
-          <!-- Icon: Dashboard -->
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           Dashboard
         </a>
         <a href="#estudiantes" class="nav-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition" data-view="estudiantes">
-          <!-- Icon: Users -->
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
@@ -133,10 +112,8 @@
           </svg>
           Ayuda / FAQ
         </button>
-
       </nav>
 
-      <!-- User / Logout -->
       <div class="px-3 py-4 border-t border-white/10">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -155,21 +132,27 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 overflow-y-auto">
 
-      <!-- VIEW: Dashboard -->
       <section id="view-dashboard" class="view-section p-6 lg:p-8">
-
         <div class="max-w-6xl mx-auto">
-
-          <!-- Header -->
-          <div class="mb-8">
-            <h1 class="text-2xl font-bold text-deep-blue">Dashboard de Riesgo</h1>
-            <p class="text-gray-500 mt-1">Distribución actual del riesgo de deserción estudiantil</p>
+          <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 class="text-2xl font-bold text-deep-blue">Dashboard de Riesgo</h1>
+              <p class="text-gray-500 mt-1">Distribución actual del riesgo de deserción estudiantil</p>
+            </div>
+            <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm border border-gray-200">
+              <select id="filtro-carrera-dashboard" class="text-sm border-none focus:ring-0 outline-none text-deep-blue font-medium cursor-pointer">
+                <option value="Todas">Todas las Carreras</option>
+                <option value="Ingeniería Informática">Ingeniería Informática</option>
+                <option value="Administración">Administración</option>
+                <option value="Odontología">Odontología</option>
+                <option value="Medicina">Medicina</option>
+                <option value="Contaduría">Contaduría</option>
+              </select>
+            </div>
           </div>
 
-          <!-- KPIs (clickeables → tabla filtrada) -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
             <div class="kpi-card cursor-pointer hover:shadow-md transition" data-level="Bajo" onclick="window.location.hash='#estudiantes?riesgo=Bajo'">
               <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
@@ -205,8 +188,19 @@
               </div>
             </div>
           </div>
+          
+          <div class="mb-8 bg-blue-50 border-l-4 border-deep-blue p-5 rounded-r-xl shadow-sm">
+            <div class="flex items-center gap-3 mb-2">
+              <h3 class="text-sm font-bold text-deep-blue uppercase tracking-wide" id="titulo-periodo">Resumen Analítico</h3>
+            </div>
+            <p class="text-sm text-gray-700 leading-relaxed font-medium" id="mensaje-inteligente">Cargando...</p>
+            <div class="mt-4 pt-4 border-t border-blue-100 flex justify-end">
+              <button id="btn-sync-dace" class="text-xs bg-electric-cyan hover:bg-[#00A3D9] text-white font-bold py-2 px-4 rounded-lg shadow-md">
+                Simular Ingesta DACE (UNERG)
+              </button>
+            </div>
+          </div>
 
-          <!-- Chart (centrado) -->
           <div class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 class="text-sm font-semibold text-deep-blue text-center mb-4">Distribución de Riesgo</h2>
             <div class="relative" style="height: 280px;">
@@ -217,31 +211,52 @@
         </div>
       </section>
 
-      <!-- VIEW: Estudiantes -->
       <section id="view-estudiantes" class="view-section p-6 lg:p-8">
-
         <div class="max-w-6xl mx-auto">
-
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
             <div>
               <h1 class="text-2xl font-bold text-deep-blue">Estudiantes</h1>
               <p class="text-gray-500 mt-1">Listado general de estudiantes y su nivel de alerta</p>
             </div>
-            <!-- Search -->
-            <div class="flex gap-3 w-full sm:w-auto">
-              <div class="relative w-full sm:w-72">
+            
+            <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              
+              <div class="relative w-full sm:w-64 shrink-0">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <input type="text" id="search-estudiantes" placeholder="Buscar por nombre o cédula..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/20 outline-none transition text-sm" />
               </div>
-              <button id="btn-toggle-form-estudiante" class="bg-electric-cyan hover:bg-[#00A3D9] text-white px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
+
+              <select id="filtro-carrera-estudiantes" class="w-full sm:w-44 px-3 py-2 bg-white rounded-xl border border-gray-300 text-sm outline-none text-gray-700 font-medium cursor-pointer focus:border-electric-cyan shrink-0">
+                <option value="Todas">Todas las Carreras</option>
+                <option value="Ingeniería Informática">Ingeniería Informática</option>
+                <option value="Administración">Administración</option>
+                <option value="Odontología">Odontología</option>
+                <option value="Medicina">Medicina</option>
+                <option value="Contaduría">Contaduría</option>
+              </select>
+
+              <select id="filtro-periodo-estudiantes" class="w-full sm:w-32 px-3 py-2 bg-white rounded-xl border border-gray-300 text-sm outline-none text-gray-700 font-medium cursor-pointer focus:border-electric-cyan shrink-0">
+                <option value="Todos">Todos los Ciclos</option>
+                <option value="2026-1">2026-1 (Actual)</option>
+                <option value="2025-2">2025-2 (Pasado)</option>
+              </select>
+
+              <select id="filtro-riesgo-estudiantes" class="w-full sm:w-32 px-3 py-2 bg-white rounded-xl border border-gray-300 text-sm outline-none text-gray-700 font-medium cursor-pointer focus:border-electric-cyan shrink-0">
+                <option value="Todos">Todo Riesgo</option>
+                <option value="Alto">Riesgo Alto</option>
+                <option value="Medio">Riesgo Medio</option>
+                <option value="Bajo">Riesgo Bajo</option>
+                <option value="Inactivo">Inactivos</option>
+              </select>
+
+              <button id="btn-toggle-form-estudiante" class="w-full sm:w-auto bg-electric-cyan hover:bg-[#00A3D9] text-white px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
                 + Nuevo
               </button>
             </div>
           </div>
 
-          <!-- Table -->
           <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
@@ -252,7 +267,7 @@
                     <th class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Edad</th>
                     <th class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Estrato</th>
                     <th class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Estado</th>
-                    <th class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Nivel de Alerta</th>
+                    <th id="sort-riesgo-btn" class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide cursor-pointer hover:text-electric-cyan transition select-none" title="Ordenar por riesgo">Nivel de Alerta ↕</th>
                     <th class="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Acción</th>
                   </tr>
                 </thead>
@@ -264,6 +279,13 @@
             <div id="table-estudiantes-empty" class="hidden text-center text-gray-400 py-12">
               No se encontraron estudiantes.
             </div>
+
+            <div id="pagination-container" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-center hidden">
+              <button id="btn-load-more" class="text-xs bg-white hover:bg-gray-100 text-deep-blue font-bold py-2.5 px-6 rounded-xl border border-gray-200 shadow-sm transition">
+                Mostrar los siguientes 100 estudiantes
+              </button>
+            </div>
+            
             <div id="panel-nuevo-estudiante" class="hidden bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
             <h3 class="text-sm font-semibold text-deep-blue mb-4">Registrar Nuevo Estudiante</h3>
             <form id="form-nuevo-estudiante" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -283,9 +305,39 @@
                 <label class="block text-xs font-medium text-gray-600 mb-1">Apellidos</label>
                 <input type="text" id="nuevo-apellidos" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm" />
               </div>
+
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Género</label>
+                <select id="nuevo-genero" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
+                  <option value="">Seleccione...</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                </select>
+              </div>
+
+              <div>
+               <label class="block text-xs font-medium text-gray-600 mb-1">Carrera</label>
+               <select id="nuevo-carrera" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
+                 <option value="">Seleccione...</option>
+                 <option value="Ingeniería Informática">Ingeniería Informática</option>
+                 <option value="Administración">Administración</option>
+                 <option value="Odontología">Odontología</option>
+                 <option value="Medicina">Medicina</option>
+                 <option value="Contaduría">Contaduría</option>
+               </select>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Estatus de Inscripción</label>
+                <select id="nuevo-es-regular" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
+                  <option value="true">Regular (Cursando el semestre actual)</option>
+                  <option value="false">Solo Activo (En BD, pero no inscribió materias)</option>
+                </select>
+              </div>
+
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Estrato Socioeconómico</label>
-                <select id="nuevo-estrato" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
+                <select id="nuevo-estrato" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
                   <option value="Medio">Medio</option>
                   <option value="Bajo">Bajo</option>
                   <option value="Muy Bajo">Muy Bajo</option>
@@ -294,7 +346,7 @@
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Situación Laboral</label>
-                <select id="nuevo-laboral" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
+                <select id="nuevo-laboral" required class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:border-electric-cyan focus:ring-2 outline-none transition text-sm">
                   <option value="false">No trabaja</option>
                   <option value="true">Trabaja</option>
                 </select>
@@ -308,12 +360,8 @@
         </div>
       </section>
 
-      <!-- VIEW: Perfil -->
       <section id="view-perfil" class="view-section p-6 lg:p-8">
-
         <div class="max-w-6xl mx-auto">
-
-          <!-- Back -->
           <button id="btn-back-estudiantes" class="flex items-center gap-2 text-sm text-gray-500 hover:text-deep-blue transition mb-6">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
@@ -321,9 +369,7 @@
             Volver a estudiantes
           </button>
 
-          <!-- Header / Semáforo -->
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-            <!-- Student info -->
             <div class="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div class="flex items-center gap-5 pb-5 border-b border-gray-100">
                 <div id="perfil-avatar" class="w-16 h-16 rounded-xl bg-gradient-to-br from-electric-cyan to-violet-brand flex items-center justify-center text-white font-bold text-2xl">—</div>
@@ -332,16 +378,18 @@
                   <p id="perfil-id" class="text-sm text-gray-500">ID #—</p>
                 </div>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-5 text-sm">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-5 text-sm">
                 <div><span class="text-gray-500">Cédula</span><p id="perfil-cedula" class="font-semibold text-gray-900">—</p></div>
+                <div><span class="text-gray-500">Carrera</span><p id="perfil-carrera" class="font-semibold text-gray-900 truncate" title="Se llenará vía JS">—</p></div>
+                <div><span class="text-gray-500">Género</span><p id="perfil-genero" class="font-semibold text-gray-900">—</p></div>
                 <div><span class="text-gray-500">Edad</span><p id="perfil-edad" class="font-semibold text-gray-900">—</p></div>
                 <div><span class="text-gray-500">Estrato</span><p id="perfil-estrato" class="font-semibold text-gray-900">—</p></div>
                 <div><span class="text-gray-500">Situación Laboral</span><p id="perfil-laboral" class="font-semibold text-gray-900">—</p></div>
-                <div><span class="text-gray-500">Estado</span><p id="perfil-estado" class="font-semibold text-gray-900">—</p></div>
+                <div><span class="text-gray-500">Estado BD</span><p id="perfil-estado" class="font-semibold text-gray-900">—</p></div>
+                <div><span class="text-gray-500">Inscripción</span><p id="perfil-inscripcion" class="font-semibold text-gray-900">—</p></div>
               </div>
             </div>
 
-            <!-- Semáforo -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center justify-center">
               <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3">Riesgo Actual</p>
               <div id="semaforo" class="w-28 h-28 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg" style="background-color: #9CA3AF;">
@@ -351,9 +399,49 @@
             </div>
           </div>
 
-          <!-- Forms -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Form: Notas -->
+          <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-sm font-semibold text-deep-blue mb-4">Expediente del Estudiante</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Historial de Notas</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-left">
+                    <thead>
+                      <tr class="border-b border-gray-100 text-gray-500 text-xs">
+                        <th class="py-2">Materia</th>
+                        <th class="py-2">Sem.</th>
+                        <th class="py-2">Nota</th>
+                        <th class="py-2">Condición</th>
+                      </tr>
+                    </thead>
+                    <tbody id="perfil-tabla-notas">
+                      </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Control de Faltas</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm text-left">
+                    <thead>
+                      <tr class="border-b border-gray-100 text-gray-500 text-xs">
+                        <th class="py-2">Materia</th>
+                        <th class="py-2">Acumuladas</th>
+                        <th class="py-2">Límite</th>
+                        <th class="py-2">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody id="perfil-tabla-faltas">
+                      </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 class="text-sm font-semibold text-deep-blue mb-4">Registrar Nota</h3>
               <form id="form-nota" class="space-y-4">
@@ -386,54 +474,7 @@
                 </button>
               </form>
             </div>
-            <!-- Historial Académico y de Faltas (El "Por qué" del riesgo) -->
-          <div class="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 class="text-sm font-semibold text-deep-blue mb-4">Expediente del Estudiante</h3>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Tabla de Notas -->
-              <div>
-                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Historial de Notas</h4>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm text-left">
-                    <thead>
-                      <tr class="border-b border-gray-100 text-gray-500 text-xs">
-                        <th class="py-2">Materia</th>
-                        <th class="py-2">Sem.</th>
-                        <th class="py-2">Nota</th>
-                        <th class="py-2">Condición</th>
-                      </tr>
-                    </thead>
-                    <tbody id="perfil-tabla-notas">
-                      <!-- Renderizado por JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
 
-              <!-- Tabla de Faltas -->
-              <div>
-                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Control de Faltas</h4>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm text-left">
-                    <thead>
-                      <tr class="border-b border-gray-100 text-gray-500 text-xs">
-                        <th class="py-2">Materia</th>
-                        <th class="py-2">Acumuladas</th>
-                        <th class="py-2">Límite</th>
-                        <th class="py-2">Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody id="perfil-tabla-faltas">
-                      <!-- Renderizado por JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-            <!-- Form: Faltas -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 class="text-sm font-semibold text-deep-blue mb-4">Registrar Falta</h3>
               <form id="form-falta" class="space-y-4">
@@ -459,13 +500,13 @@
               </form>
             </div>
           </div>
+
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- Dashboard JS -->
   <script src="js/dashboard.js"></script>
 
   <div id="modal-faq" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-deep-blue/80 backdrop-blur-sm p-4 transition-opacity">
