@@ -27,27 +27,18 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         db.refresh(nuevo_analisis)
         return nuevo_analisis
 
-   
     factor_socio = 0.0
-    
     
     if getattr(estudiante, 'Situacion_Laboral', False) == True: 
         factor_socio += 40.0
     
+   
     estrato = str(getattr(estudiante, 'Estrato_Socioeconomico', '')).lower()
     if estrato in ["bajo", "muy bajo"]:
         factor_socio += 40.0
-
-    
-    carrera = str(getattr(estudiante, 'Carrera', '')).lower()
-    if "informática" in carrera or "ingeniería" in carrera:
-        factor_socio += 20.0
-    else:
-        factor_socio += 10.0
-        
+       
     factor_socio = min(factor_socio, 100.0)
 
-   
     faltas = db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == id_estudiante).all()
     factor_asistencia = 0.0
     if faltas:
