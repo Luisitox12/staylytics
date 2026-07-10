@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from core.database import Base 
 
-# 1. ENTIDAD DE SEGURIDAD
+
 class UsuarioAdministrativo(Base):
     __tablename__ = "Usuarios_Administrativos"
     ID_Usuario = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -14,8 +14,6 @@ class UsuarioAdministrativo(Base):
     Estatus = Column(Boolean, default=True)
     Fecha_Registro = Column(TIMESTAMP, server_default=func.now())
 
-# 2. ENTIDAD NÚCLEO (Estudiantes)
-# 2. ENTIDAD NÚCLEO (Estudiantes)
 class Estudiante(Base):
     __tablename__ = "Estudiantes"
     ID_Estudiante = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -25,9 +23,9 @@ class Estudiante(Base):
     Edad = Column(Integer, nullable=False)
     Genero = Column(String(20), nullable=False) 
     Carrera = Column(String(100), nullable=False)
-    Estatus_Actual = Column(String(20), default='Activo') # Activo en el sistema central
-    Es_Regular = Column(Boolean, default=True)            # True = Inscribió materias este semestre
-    Ultimo_Periodo = Column(String(20), nullable=True)    # Para filtrar por tiempo de carga (Ej: "2026-1")
+    Estatus_Actual = Column(String(20), default='Activo') 
+    Es_Regular = Column(Boolean, default=True)            
+    Ultimo_Periodo = Column(String(20), nullable=True)    
     Estrato_Socioeconomico = Column(String(20), nullable=False)
     Situacion_Laboral = Column(Boolean, nullable=False)
 
@@ -36,7 +34,7 @@ class Estudiante(Base):
     riesgos = relationship("AnalisisRiesgo", back_populates="estudiante", cascade="all, delete-orphan")
     deserciones = relationship("RegistroDesercion", back_populates="estudiante", cascade="all, delete-orphan")
 
-# 3. ENTIDADES DINÁMICAS
+
 class HistorialAcademico(Base):
     __tablename__ = "Historial_Academico"
     ID_Historial = Column(Integer, primary_key=True, index=True, autoincrement=True)

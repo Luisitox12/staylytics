@@ -142,7 +142,7 @@ def sincronizar_dace_lote(payload: list[schemas.EstudianteDaceSync], db: Session
             db_est.Carrera = est_data.Carrera                # type: ignore
             db.commit()
 
-        # Limpieza de seguridad: borrar notas previas del mismo semestre para no duplicar
+        
         db.query(models.HistorialAcademico).filter(
             models.HistorialAcademico.ID_Estudiante == db_est.ID_Estudiante,
             models.HistorialAcademico.Semestre == (est_data.Notas[0].Semestre if est_data.Notas else 1)
@@ -150,7 +150,7 @@ def sincronizar_dace_lote(payload: list[schemas.EstudianteDaceSync], db: Session
         
         db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == db_est.ID_Estudiante).delete()
 
-        # Ingesta Transaccional de Notas
+        
         if notas_inbound:
             for n in notas_inbound:
                 nueva_nota = models.HistorialAcademico(
@@ -162,7 +162,7 @@ def sincronizar_dace_lote(payload: list[schemas.EstudianteDaceSync], db: Session
                 )
                 db.add(nueva_nota)
 
-        # Ingesta Transaccional de Faltas
+        
         if faltas_inbound:
             for f in faltas_inbound:
                 nueva_falta = models.ControlFaltas(

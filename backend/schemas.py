@@ -13,11 +13,11 @@ class EstudianteBase(BaseModel):
     Situacion_Laboral: bool
     Es_Regular: bool = True
     Ultimo_Periodo: Optional[str] = None
-# 2. ESQUEMA DE CREACIÓN
+
 class EstudianteCreate(EstudianteBase):
     pass 
 
-# 3. ESQUEMAS DE RESPUESTA BLINDADOS
+
 class EstudianteResponse(EstudianteBase):
     ID_Estudiante: int
     Estatus_Actual: str
@@ -87,7 +87,7 @@ class UsuarioCreate(BaseModel):
     Password: str
     Rol: str = "Coordinador"
 
-# Esquemas auxiliares para la ingesta masiva de DACE
+
 class NotaDaceInbound(BaseModel):
     Materia: str
     Semestre: int
@@ -99,7 +99,7 @@ class FaltaDaceInbound(BaseModel):
     Faltas_Acumuladas: int
     Limite_Faltas: int
 
-# El payload maestro que enviará el sistema central por cada alumno
+
 class EstudianteDaceSync(BaseModel):
     Cedula: str
     Nombres: str

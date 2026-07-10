@@ -14,33 +14,33 @@
  * Modo mock = false → usa fetch() real con token
  * ============================================================ */
 
-// ================================================================
+
 // 1. MOCK DATA — estructura IDÉNTICA a la que devuelve la API real
-// ================================================================
+
 const MOCK = Object.freeze({
-  enabled: false, // LA IA ESTÁ APAGADA. CONECTADO AL BACKEND REAL.
+  enabled: false, 
 
   resumen: { Bajo: 10, Medio: 5, Alto: 3 },
 
   estudiantes: [
     { Cedula: "28544044", Nombres: "Luis", Apellidos: "Hidalgo", Edad: 25, Estrato_Socioeconomico: "Medio", Situacion_Laboral: false, ID_Estudiante: 1, Estatus_Actual: "Activo", Riesgo: "Alto" },
-    // ... resto de mock data (ignorado porque enabled es false)
+    
   ],
 
-  /** Devuelve los estudiantes filtrados por nivel de riesgo */
+  
   estudiantesPorRiesgo(nivel) {
     return this.estudiantes.filter((e) => e.Riesgo === nivel);
   },
 
-  /** Devuelve un estudiante por ID */
+ 
   estudiantePorId(id) {
     return this.estudiantes.find((e) => e.ID_Estudiante === id) || null;
   },
 });
 
-// ================================================================
+
 // 2. AUTH
-// ================================================================
+
 const TOKEN_KEY = "staylytics_token";
 const USER_KEY = "staylytics_user";
 
@@ -61,9 +61,9 @@ function estaAutenticado() {
   return !!getToken();
 }
 
-// ================================================================
+
 // 3. API WRAPPER
-// ================================================================
+
 const API_BASE = "http://localhost:8000";
 
 //const API_BASE = "https://staylytics-api.onrender.com";
@@ -78,12 +78,12 @@ async function apiFetch(endpoint, options = {}) {
     ...options.headers,
   };
 
-  // Si hay token y no es el login, lo inyectamos
+  
   if (token && !endpoint.includes("/auth/")) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Modo mock: interceptamos endpoints conocidos
+  
   if (MOCK.enabled) {
     return mockHandler(endpoint, options);
   }
@@ -93,7 +93,7 @@ async function apiFetch(endpoint, options = {}) {
     headers,
   });
 
-  // Token expirado → logout automático
+  
   if (res.status === 401) {
     clearToken();
     window.location.hash = "#login";
@@ -108,14 +108,14 @@ async function apiFetch(endpoint, options = {}) {
   return res.json();
 }
 
-// ================================================================
+
 // 3b. MOCK HANDLER — responde igual que la API real
-// ================================================================
+
 function mockHandler(endpoint, options = {}) {
-  // Simular latencia de red
+  
   const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // Login mock
+  
   if (endpoint === "/api/auth/login" && options.method === "POST") {
     return delay(600).then(() => ({
       access_token: "mock_token_sin_backend",
@@ -123,12 +123,12 @@ function mockHandler(endpoint, options = {}) {
     }));
   }
 
-  // Dashboard resumen
+  
   if (endpoint === "/api/dashboard/resumen") {
     return delay(400).then(() => ({ ...MOCK.resumen }));
   }
 
-  // Lista de estudiantes
+  
   if (endpoint === "/api/estudiantes/") {
     return delay(400).then(() =>
       MOCK.estudiantes.map(({ Riesgo, ...rest }) => ({
@@ -138,7 +138,7 @@ function mockHandler(endpoint, options = {}) {
     );
   }
 
-  // Estudiantes por riesgo (drill-down)
+  
   const riesgoMatch = endpoint.match(/^\/api\/estudiantes\/riesgo\/(\w+)$/);
   if (riesgoMatch) {
     const nivel = riesgoMatch[1].charAt(0).toUpperCase() + riesgoMatch[1].slice(1).toLowerCase();
@@ -150,7 +150,7 @@ function mockHandler(endpoint, options = {}) {
     );
   }
 
-  // Estudiante por ID
+  
   const idMatch = endpoint.match(/^\/api\/estudiantes\/(\d+)$/);
   if (idMatch) {
     const id = parseInt(idMatch[1], 10);
@@ -160,7 +160,7 @@ function mockHandler(endpoint, options = {}) {
     return delay(400).then(() => ({ ...rest }));
   }
 
-  // POST falta (mock)
+  
   if (endpoint === "/api/faltas/" && options.method === "POST") {
     const body = JSON.parse(options.body || "{}");
     return delay(500).then(() => ({
@@ -172,7 +172,7 @@ function mockHandler(endpoint, options = {}) {
     }));
   }
 
-  // POST historial (mock)
+  
   if (endpoint === "/api/historial/" && options.method === "POST") {
     const body = JSON.parse(options.body || "{}");
     return delay(500).then(() => ({
@@ -185,27 +185,27 @@ function mockHandler(endpoint, options = {}) {
     }));
   }
 
-  // Fallback
+  
   return delay(300).then(() => ({}));
 }
 
-// ================================================================
+
 // 4. ROUTER
-// ================================================================
+
 let currentView = null;
 
 function navigate(hash) {
-  // Extraer view y params
+  
   const [view, ...rest] = hash.replace("#", "").split("?");
   const params = new URLSearchParams(rest.join("?"));
 
-  // Si no está autenticado y no está en login, redirigir
+  
   if (!estaAutenticado() && view !== "login") {
     showView("login");
     return;
   }
 
-  // Si está autenticado y está en login, redirigir a dashboard
+  
   if (estaAutenticado() && view === "login") {
     showView("dashboard");
     return;
@@ -238,16 +238,16 @@ function navigate(hash) {
 }
 
 function showView(view) {
-  // Login vs app
+  
   document.getElementById("view-login").classList.toggle("hidden", view !== "login");
   document.getElementById("app-main").classList.toggle("hidden", view === "login");
 
-  // Views dentro de app
+  
   document.querySelectorAll(".view-section").forEach((el) => {
     el.classList.toggle("hidden", el.id !== `view-${view}`);
   });
 
-  // Active nav
+  
   document.querySelectorAll(".nav-link").forEach((el) => {
     const isActive = el.dataset.view === view;
     el.classList.toggle("bg-white/10", isActive);
@@ -258,9 +258,9 @@ function showView(view) {
   currentView = view;
 }
 
-// ================================================================
+
 // 5. VIEWS
-// ================================================================
+
 
 // ---- 5a. LOGIN ----
 async function handleLogin(email, password) {
@@ -273,13 +273,13 @@ async function handleLogin(email, password) {
 
   try {
     if (MOCK.enabled) {
-      // Mock: login instantáneo
+      
       setToken("mock_token_sin_backend");
       window.location.hash = "#dashboard";
       return;
     }
 
-    // Login real: FormData estricto (OAuth2)
+    
     const formData = new FormData();
     formData.append("username", email);
     formData.append("password", password);
@@ -312,17 +312,17 @@ async function renderDashboard() {
 
   const data = await apiFetch(url);
 
-  // Inyectar datos en el panel inteligente
+  
   document.getElementById('titulo-periodo').textContent = `Resumen Analítico — Cohorte ${data.Periodo_Actual}`;
   document.getElementById('mensaje-inteligente').textContent = data.Mensaje_Inteligente;
 
-  // KPIs
+  
   document.querySelectorAll(".kpi-val").forEach((el) => {
     const key = el.dataset.key;
     el.textContent = data[key] ?? 0;
   });
 
-  // Chart
+ 
   const ctx = document.getElementById("dashboardChart").getContext("2d");
   if (dashboardChartInstance) dashboardChartInstance.destroy();
 
@@ -377,15 +377,15 @@ async function renderDashboard() {
 // ---- 5c. TABLA GENERAL DE ESTUDIANTES ----
 let estudiantesData = [];
 
-let ordenRiesgoActivo = 0; // -1 = Descendente (Alto a Bajo), 1 = Ascendente // 0 = Alfabético, -1 = Descendente (Alto), 1 = Ascendente (Bajo)
-let limiteVisualEstudiantes = 100; // Buffer visual para evitar el colapso del DOM
+let ordenRiesgoActivo = 0; 
+let limiteVisualEstudiantes = 100; 
 
 async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
   const tbody = document.getElementById("table-estudiantes-body");
   const empty = document.getElementById("table-estudiantes-empty");
   const pagContainer = document.getElementById("pagination-container");
 
-  // Si es un filtro nuevo o navegación limpia, reiniciamos el visor a 100
+  
   if (!cargarMas) {
       limiteVisualEstudiantes = 100;
   }
@@ -405,13 +405,13 @@ async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
   const queryStr = params.toString();
   if (queryStr) endpoint += `?${queryStr}`;
 
-  // Si solo estamos expandiendo la lista, no mostramos el loader para no parpadear la pantalla
+  
   if (!cargarMas) {
       tbody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-400 py-12">Filtrando expedientes...</td></tr>`;
   }
 
   try {
-    // Si cargamos más, reutilizamos los datos que ya están guardados en memoria local
+    
     if (!cargarMas) {
         estudiantesData = await apiFetch(endpoint);
     }
@@ -430,7 +430,7 @@ async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
 
     empty.classList.add("hidden");
 
-    // Ordenamiento multidimensional
+    
     const jerarquiaRiesgo = { "Alto": 4, "Medio": 3, "Bajo": 2, "Inactivo": 1, "—": 0 };
     dataFiltrada.sort((a, b) => {
         if (ordenRiesgoActivo === 0) {
@@ -444,7 +444,7 @@ async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
         }
     });
 
-    // --- SEGMENTACIÓN (PAGINACIÓN FRONTAL) ---
+    
     const totalFiltrados = dataFiltrada.length;
     const chunkMostrado = dataFiltrada.slice(0, limiteVisualEstudiantes);
 
@@ -469,7 +469,7 @@ async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
         </tr>
       `).join("");
 
-    // Control de visibilidad del botón de carga masiva
+    
     if (pagContainer) {
         if (limiteVisualEstudiantes < totalFiltrados) {
             pagContainer.classList.remove("hidden");
@@ -487,14 +487,14 @@ async function renderTablaEstudiantes(filtroRiesgoDirecto, cargarMas = false) {
 async function renderPerfil(id) {
   const est = await apiFetch(`/api/estudiantes/${id}`);
 
-  // Leemos el riesgo directamente de tu nuevo esquema del backend
+  
   const riesgoEst = est.Riesgo || "—"; 
 
-  // Avatar
+  
   const inicial = (est.Nombres || "—").charAt(0).toUpperCase();
   document.getElementById("perfil-avatar").textContent = inicial;
 
-  // Info
+  
   document.getElementById("perfil-nombre").textContent = `${est.Nombres || "—"} ${est.Apellidos || "—"}`;
   document.getElementById("perfil-id").textContent = `ID #${est.ID_Estudiante}`;
   document.getElementById("perfil-cedula").textContent = est.Cedula || "—";
@@ -515,7 +515,7 @@ async function renderPerfil(id) {
       inscripcionEl.className = "font-semibold text-red-600";
   }
 
-  // Semáforo
+  
   const semaforoMap = {
     Bajo: { color: "#10B981", label: "Bajo", text: "white" },
     Medio: { color: "#F59E0B", label: "Medio", text: "white" },
@@ -528,15 +528,15 @@ async function renderPerfil(id) {
   document.getElementById("semaforo-label").textContent =
     riesgoEst !== "—" ? `Riesgo ${s.label}` : "Sin datos de riesgo";
 
-  // Cargar ID en formularios
+  
   document.getElementById("nota-id-estudiante").value = id;
   document.getElementById("falta-id-estudiante").value = id;
 
-  // --- CARGAR EXPEDIENTE (NOTAS Y FALTAS) ---
+  
   try {
     const expediente = await apiFetch(`/api/estudiantes/${id}/expediente`);
     
-    // Renderizar Notas
+    
     const tbodyNotas = document.getElementById("perfil-tabla-notas");
     if (expediente.notas.length === 0) {
       tbodyNotas.innerHTML = `<tr><td colspan="4" class="py-3 text-gray-400 text-xs text-center">Sin notas registradas</td></tr>`;
@@ -551,7 +551,7 @@ async function renderPerfil(id) {
       `).join('');
     }
 
-    // Renderizar Faltas
+    
     const tbodyFaltas = document.getElementById("perfil-tabla-faltas");
     if (expediente.faltas.length === 0) {
       tbodyFaltas.innerHTML = `<tr><td colspan="4" class="py-3 text-gray-400 text-xs text-center">Sin faltas registradas</td></tr>`;
@@ -689,7 +689,7 @@ document.getElementById("form-nuevo-estudiante")?.addEventListener("submit", asy
     await apiFetch("/api/estudiantes/", { method: "POST", body: JSON.stringify(body) });
     e.target.reset();
     document.getElementById("panel-nuevo-estudiante").classList.add("hidden");
-    // Refrescamos la tabla para que aparezca el nuevo registro
+    
     renderTablaEstudiantes();
   } catch (err) {
     alert(`Error: ${err.message}`);
@@ -699,9 +699,9 @@ document.getElementById("form-nuevo-estudiante")?.addEventListener("submit", asy
   }
 });
 
-// ================================================================
+
 // 6. UTILITIES
-// ================================================================
+
 function riesgoBadgeHTML(nivel) {
   const map = {
     Bajo: "bg-emerald-100 text-emerald-800",
@@ -712,11 +712,11 @@ function riesgoBadgeHTML(nivel) {
   return `<span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}">${nivel}</span>`;
 }
 
-// ================================================================
+
 // 7. INIT (ARRANQUE DEL SISTEMA Y ESCUCHA DE EVENTOS)
-// ================================================================
+
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Autenticación ---
+  
   document.getElementById("form-login")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value;
@@ -734,12 +734,12 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.hash = "#login";
   });
 
-  // --- Navegación ---
+  
   document.getElementById("btn-back-estudiantes")?.addEventListener("click", () => {
     window.location.hash = "#estudiantes";
   });
 
-  // --- Router ---
+  
   window.addEventListener("hashchange", () => navigate(window.location.hash));
   if (!window.location.hash || window.location.hash === "#") {
     window.location.hash = estaAutenticado() ? "#dashboard" : "#login";
@@ -747,7 +747,7 @@ document.addEventListener("DOMContentLoaded", () => {
     navigate(window.location.hash);
   }
 
-  // --- Control del Modal FAQ ---
+ 
   const modalFaq = document.getElementById("modal-faq");
   
   document.getElementById("btn-open-faq")?.addEventListener("click", (e) => {
@@ -765,12 +765,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Filtros Analíticos (Sección Dashboard) ---
+  
   document.getElementById('filtro-carrera-dashboard')?.addEventListener('change', () => {
     renderDashboard();
   });
 
-  // --- Filtros Analíticos (Sección Estudiantes) ---
+  
   document.getElementById('filtro-carrera-estudiantes')?.addEventListener('change', () => {
     if (window.location.hash.includes("riesgo=")) window.location.hash = "#estudiantes";
     renderTablaEstudiantes();
@@ -781,20 +781,20 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTablaEstudiantes();
   });
 
-  // --- Simulador de Ingesta Masiva DACE (UNERG) ---
-  // --- Simulador de Ingesta Masiva DACE (UNERG) ---
+  
+  
   document.getElementById('btn-sync-dace')?.addEventListener('click', async (e) => {
     const btn = e.target;
     btn.textContent = "Ingestando 1,000 expedientes (DACE)...";
     btn.disabled = true;
 
     try {
-      // 1. Descargamos el JSON masivo localmente
+      
       const responseArchivo = await fetch('lote_1000.json');
       if (!responseArchivo.ok) throw new Error("No se encontró el archivo lote_1000.json");
       const loteDACE = await responseArchivo.json();
 
-      // 2. Lo enviamos al Webhook del Backend
+      
       const response = await apiFetch("/api/estudiantes/dace-webhook", { 
         method: "POST", 
         body: JSON.stringify(loteDACE) 
@@ -810,15 +810,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Filtro de Riesgo Local ---
+  
   document.getElementById('filtro-riesgo-estudiantes')?.addEventListener('change', () => {
     if (window.location.hash.includes("riesgo=")) window.location.hash = "#estudiantes";
     renderTablaEstudiantes();
   });
 
- // --- Ordenar por Nivel de Alerta ---
+ 
   document.getElementById('sort-riesgo-btn')?.addEventListener('click', () => {
-    // Ciclo: Alfabético (0) -> Riesgo Alto Primero (-1) -> Riesgo Bajo Primero (1) -> vuelve a 0
+    
     if (ordenRiesgoActivo === 0) {
         ordenRiesgoActivo = -1;
     } else if (ordenRiesgoActivo === -1) {
@@ -833,9 +833,9 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTablaEstudiantes();
   });
 
-  // --- Control de Paginación Frontal (Cargar más) ---
+  
   document.getElementById("btn-load-more")?.addEventListener("click", () => {
-    limiteVisualEstudiantes += 100; // Incrementamos el visor en bloques de 100
-    renderTablaEstudiantes(null, true); // Forzamos el renderizado sin consultar la API de nuevo
+    limiteVisualEstudiantes += 100; 
+    renderTablaEstudiantes(null, true); 
   });
 });

@@ -27,7 +27,7 @@ def obtener_resumen_riesgo(carrera: Optional[str] = None, db: Session = Depends(
         models.Estudiante.Ultimo_Periodo == periodo_actual
     )
 
-    # Si enviaron una carrera desde el frontend, la filtramos
+    
     if carrera and carrera != "Todas":
         query = query.filter(models.Estudiante.Carrera == carrera)
     
@@ -44,7 +44,7 @@ def obtener_resumen_riesgo(carrera: Optional[str] = None, db: Session = Depends(
         if alerta == "Alto":
             carreras_alto_riesgo[carrera_db] = carreras_alto_riesgo.get(carrera_db, 0) + 1
 
-    # Generación de Mensaje
+    
     if carrera and carrera != "Todas":
         mensaje = f"Análisis aislado para {carrera}. Total de alumnos regulares: {total_activos}."
         if carreras_alto_riesgo:

@@ -15,11 +15,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
     if not estudiante:
         return None
 
-    # =====================================================================
-    # REGLA DE NEGOCIO CRÍTICA (Exigencia DACE)
-    # =====================================================================
-    # Cortocircuito Lógico: Si el estudiante no inscribió materias este 
-    # semestre, el motor predictivo se detiene. No hay riesgo que prevenir.
+  
     if getattr(estudiante, 'Es_Regular', False) == False:
         nuevo_analisis = models.AnalisisRiesgo(
             ID_Estudiante=id_estudiante,
@@ -31,12 +27,10 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         db.refresh(nuevo_analisis)
         return nuevo_analisis
 
-    # =====================================================================
-    # MÓDULO 1: Demográfico y Socioeconómico (Contexto Invisible)
-    # =====================================================================
+   
     factor_socio = 0.0
     
-    # 1. Factores Económicos Clásicos
+    
     if getattr(estudiante, 'Situacion_Laboral', False) == True: 
         factor_socio += 40.0
     
@@ -44,8 +38,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
     if estrato in ["bajo", "muy bajo"]:
         factor_socio += 40.0
 
-    # 2. Modificador Institucional (El argumento para la profesora)
-    # Penalización base por carrera. (Ej: Ingeniería tiene mayor carga de deserción temprana)
+    
     carrera = str(getattr(estudiante, 'Carrera', '')).lower()
     if "informática" in carrera or "ingeniería" in carrera:
         factor_socio += 20.0
@@ -54,9 +47,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         
     factor_socio = min(factor_socio, 100.0)
 
-    # =====================================================================
-    # MÓDULO 2: Asistencia (Indicador Temprano - 45%)
-    # =====================================================================
+   
     faltas = db.query(models.ControlFaltas).filter(models.ControlFaltas.ID_Estudiante == id_estudiante).all()
     factor_asistencia = 0.0
     if faltas:
@@ -68,9 +59,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
             porcentajes.append((acum / limite_seguro) * 100.0)
         factor_asistencia = min(max(porcentajes), 100.0)
 
-    # =====================================================================
-    # MÓDULO 3: Académico (Indicador Tardío - 35%)
-    # =====================================================================
+   
     historial = db.query(models.HistorialAcademico).filter(models.HistorialAcademico.ID_Estudiante == id_estudiante).all()
     factor_academico = 0.0
     if historial:
@@ -91,9 +80,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         sub_reprobacion = (float(materias_reprobadas) / float(materias_totales)) * 100.0
         factor_academico = (sub_promedio * 0.30) + (sub_reprobacion * 0.70)
 
-    # =====================================================================
-    # MOTOR DE PESOS DINÁMICOS (Redistribución por Cold Start)
-    # =====================================================================
+
     peso_socio = 0.20
     peso_asistencia = 0.45
     peso_academico = 0.35
@@ -112,9 +99,7 @@ def ejecutar_recalculo_riesgo(id_estudiante: int, db: Session):
         peso_asistencia = 0.0
         peso_academico = 0.0
 
-    # =====================================================================
-    # FUSIÓN INTELIGENTE Y CLASIFICACIÓN
-    # =====================================================================
+
     riesgo_total = (factor_asistencia * peso_asistencia) + (factor_academico * peso_academico) + (factor_socio * peso_socio)
     puntuacion_final = int(round(riesgo_total))
 

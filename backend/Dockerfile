@@ -1,4 +1,4 @@
-# Usa Python 3.10 optimizado
+
 FROM python:3.10-slim
 
 WORKDIR /app
